@@ -34,7 +34,7 @@ def set_axes(fig, x_format: str, y_format: str):
     return fig
 
 
-def update_layout(fig, orientation: str = "v"):
+def update_layout(fig, orientation: str = "v", help_text: Optional[str] = None):
     """Apply common layout updates to the figure."""
     fig.update_xaxes(title_text="", automargin=True)
     fig.update_yaxes(title_text="")
@@ -52,6 +52,28 @@ def update_layout(fig, orientation: str = "v"):
         ),
         font=dict(family=FONT_FAMILY),
     )
+    if help_text:
+        fig.update_layout(
+            annotations=[
+                dict(
+                    x=1,
+                    y=1.25,
+                    xref="paper",
+                    yref="paper",
+                    text="❔",
+                    showarrow=False,
+                    font=dict(size=20),
+                    xanchor="right",
+                    yanchor="top",
+                    hovertext=help_text,
+                    hoverlabel=dict(
+                        bgcolor="#333333",
+                        font_size=14,
+                        font_color="white",
+                    ),
+                )
+            ]
+        )
     return fig
 
 
@@ -63,6 +85,7 @@ def chart_many_bars(
     color: Optional[str] = None,
     x_format: str = "#",
     y_format: str = "$",
+    help_text: Optional[str] = None,
 ):
     """Create a bar chart with multiple series."""
     fig = px.bar(
@@ -80,7 +103,7 @@ def chart_many_bars(
     fig.update_layout(
         font=dict(family=FONT_FAMILY),
     )
-    return fig
+    return update_layout(fig, help_text=help_text)
 
 
 def chart_many_lines(
@@ -91,6 +114,7 @@ def chart_many_lines(
     color: Optional[str] = None,
     x_format: str = "#",
     y_format: str = "$",
+    help_text: Optional[str] = None,
 ):
     """Create a line chart with multiple series."""
     fig = px.line(
@@ -103,7 +127,7 @@ def chart_many_lines(
         template=PLOTLY_TEMPLATE,
     )
     fig = set_axes(fig, x_format, y_format)
-    return update_layout(fig)
+    return update_layout(fig, help_text=help_text)
 
 
 def chart_bars(
@@ -115,6 +139,8 @@ def chart_bars(
     x_format: str = "#",
     y_format: str = "$",
     column: bool = False,
+    barmode: str = "relative",
+    help_text: Optional[str] = None,
 ):
     """Create a bar chart."""
     fig = px.bar(
@@ -126,9 +152,10 @@ def chart_bars(
         color_discrete_sequence=CATEGORICAL_COLORS,
         template=PLOTLY_TEMPLATE,
         orientation="h" if column else "v",
+        barmode=barmode,
     )
     fig = set_axes(fig, x_format, y_format)
-    return update_layout(fig, orientation="h" if column else "v")
+    return update_layout(fig, orientation="h" if column else "v", help_text=help_text)
 
 
 def chart_area(
@@ -140,6 +167,7 @@ def chart_area(
     x_format: str = "#",
     y_format: str = "$",
     column: bool = False,
+    help_text: Optional[str] = None,
 ):
     """Create an area chart."""
     fig = px.area(
@@ -152,7 +180,7 @@ def chart_area(
         template=PLOTLY_TEMPLATE,
     )
     fig = set_axes(fig, x_format, y_format)
-    return update_layout(fig, orientation="h" if column else "v")
+    return update_layout(fig, orientation="h" if column else "v", help_text=help_text)
 
 
 def chart_lines(
@@ -164,6 +192,7 @@ def chart_lines(
     smooth: bool = False,
     x_format: str = "#",
     y_format: str = "$",
+    help_text: Optional[str] = None,
 ):
     """Create a line chart."""
     fig = px.line(
@@ -177,10 +206,10 @@ def chart_lines(
     )
     fig.update_traces(line_shape=None if smooth else "hv")
     fig = set_axes(fig, x_format, y_format)
-    return update_layout(fig)
+    return update_layout(fig, help_text=help_text)
 
 
-def chart_oi(df, x_col: str, title: str):
+def chart_oi(df, x_col: str, title: str, help_text: Optional[str] = None):
     """Create an Open Interest chart."""
     fig = px.area(
         df,
@@ -191,39 +220,4 @@ def chart_oi(df, x_col: str, title: str):
         title=title,
     )
     fig.update_yaxes(tickformat=".0%")
-    return update_layout(fig)
-
-
-def chart_oi(df, x_col, title):
-    fig = px.area(
-        df,
-        x=x_col,
-        y=["short_oi_pct", "long_oi_pct"],
-        line_shape="hv",
-        color_discrete_sequence=["red", "green"],
-        title=title,
-    )
-
-    # remove axis labels
-    fig.update_traces(hovertemplate=None)
-    fig.update_xaxes(
-        title_text="",
-        automargin=True,
-    )
-    fig.update_yaxes(title_text="", tickformat=".0%")
-
-    fig.update_layout(
-        hovermode="x unified",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1,
-            title=None,
-        ),
-        font=dict(
-            family="sans-serif",
-        ),
-    )
-    return fig
+    return update_layout(fig, help_text=help_text)

@@ -205,6 +205,116 @@ class SynthetixAPI:
         with self.get_connection() as conn:
             return pd.read_sql_query(query, conn)
 
+    def get_core_account_activity(
+        self,
+        start_date: datetime,
+        end_date: datetime,
+        chain: str = "arbitrum_mainnet",
+        resolution: str = "day",
+    ) -> pd.DataFrame:
+        chain_label = self.SUPPORTED_CHAINS[chain]
+        query = f"""
+        with delegated as (
+            select distinct
+                block_timestamp,
+                account_id,
+                'Delegated' as action
+            from {self.environment}_raw_{chain}.core_delegation_updated_{chain} as core
+        ),
+        withdrawn as (
+            select
+                block_timestamp,
+                account_id,
+                'Withdrawn' as action
+            from {self.environment}_raw_{chain}.core_withdrawn_{chain} as core
+        ),
+        claimed as (
+            select
+                block_timestamp,
+                account_id,
+                'Claimed' as action
+            from {self.environment}_raw_{chain}.core_rewards_claimed_{chain} as core
+        ),
+        combined as (
+            select * from delegated
+            union all
+            select * from withdrawn
+            union all
+            select * from claimed
+        )
+        select
+            date_trunc('{resolution}', block_timestamp) as date,
+            '{chain_label}' as chain,
+            action,
+            count(distinct account_id) as nof_accounts
+        from combined
+        where block_timestamp >= '{start_date}' and block_timestamp <= '{end_date}'
+        group by
+            date, action
+        order by date desc
+        """
+        with self.get_connection() as conn:
+            return pd.read_sql_query(query, conn)
+
+    def get_core_nof_stakers(
+        self,
+        start_date: datetime,
+        end_date: datetime,
+        chain: str = "arbitrum_mainnet",
+    ) -> pd.DataFrame:
+        chain_label = self.SUPPORTED_CHAINS[chain]
+        query = f"""
+        with delegation_updated as (
+            select
+                block_timestamp,
+                account_id,
+                amount
+            from {self.environment}_raw_{chain}.core_delegation_updated_{chain} as core
+        ),
+
+        dim as (
+            select  
+                d.ts,
+                accounts.account_id
+            from (
+                select 
+                    generate_series(
+                        date_trunc('day', date('2023-12-15')),
+                        date_trunc('day', current_date), '1 day'::interval
+                    ) as ts
+            ) as d
+            cross join (
+                select distinct account_id from delegation_updated
+            ) as accounts
+        ),
+
+        stakers as (
+            select 
+                ts,
+                dim.account_id,
+                case when coalesce(last(amount) over (
+                    partition by dim.account_id
+                    order by ts
+                    rows between unbounded preceding and current row
+                ), 0) = 0 then 0 else 1 end as is_staking
+            from dim
+            left join delegation_updated
+                on dim.ts = date(delegation_updated.block_timestamp)
+                and dim.account_id = delegation_updated.account_id
+        )
+
+        select
+            ts,
+            '{chain_label}' as chain,
+            sum(is_staking) as nof_stakers
+        from stakers
+        where ts >= '{start_date}' and ts <= '{end_date}'
+        group by ts
+        order by ts asc
+        """
+        with self.get_connection() as conn:
+            return pd.read_sql_query(query, conn)
+
     def get_perps_stats(
         self,
         start_date: datetime,
@@ -270,6 +380,34 @@ class SynthetixAPI:
         WHERE
             ts >= '{start_date}' and ts <= '{end_date}'
         ORDER BY ts
+        """
+        with self.get_connection() as conn:
+            return pd.read_sql_query(query, conn)
+
+    def get_perps_account_activity(
+        self,
+        start_date: datetime,
+        end_date: datetime,
+        chain: str = "arbitrum_mainnet",
+        resolution: str = "day",
+    ) -> pd.DataFrame:
+        chain_label = self.SUPPORTED_CHAINS[chain]
+        query = f"""
+            with user_stats as (
+                select 
+                    date_trunc('{resolution}', block_timestamp) as date,
+                    count(distinct account_id) as nof_accounts
+                from {self.environment}_raw_{chain}.perp_order_settled_{chain}
+                where block_timestamp >= '{start_date}' and block_timestamp <= '{end_date}'
+                group by date_trunc('{resolution}', block_timestamp)
+            )
+            select
+                date,
+                '{chain_label}' as chain,
+                nof_accounts,
+                nof_accounts - lag(nof_accounts, 1, nof_accounts) over (order by date asc) as new_accounts
+            from user_stats
+            order by date asc
         """
         with self.get_connection() as conn:
             return pd.read_sql_query(query, conn)

@@ -36,11 +36,25 @@ def fetch_data(date_range, chain):
         )
         for current_chain in chains_to_fetch
     ]
+    core_account_activity_daily = [
+        st.session_state.api.get_core_account_activity(
+            start_date=start_date.date(),
+            end_date=end_date.date(),
+            chain=current_chain,
+            resolution="day",
+        )
+        for current_chain in chains_to_fetch
+    ]
 
     return {
         "core_stats_by_collateral": (
             pd.concat(core_stats_by_collateral, ignore_index=True)
             if core_stats_by_collateral
+            else pd.DataFrame()
+        ),
+        "core_account_activity_daily": (
+            pd.concat(core_account_activity_daily, ignore_index=True)
+            if core_account_activity_daily
             else pd.DataFrame()
         ),
     }
@@ -73,6 +87,18 @@ chart_core_tvl_by_collateral = chart_area(
     title="TVL",
     color="label",
 )
+chart_core_account_activity_daily = chart_lines(
+    data["core_account_activity_daily"]
+    .groupby(["date", "action"])
+    .nof_accounts.sum()
+    .reset_index(),
+    x_col="date",
+    y_cols="nof_accounts",
+    title="Accounts Activity",
+    color="action",
+    y_format="#",
+    help_text="Number of daily active accounts per action (Delegate, Withdraw, Claim)",
+)
 chart_core_apr_by_collateral = chart_lines(
     data["core_stats_by_collateral"],
     x_col="ts",
@@ -104,12 +130,12 @@ chart_core_rewards_usd_by_collateral = chart_bars(
     color="label",
 )
 
-
-st.plotly_chart(chart_core_tvl_by_collateral, use_container_width=True)
 chart_col1, chart_col2 = st.columns(2)
 with chart_col1:
+    st.plotly_chart(chart_core_tvl_by_collateral, use_container_width=True)
     st.plotly_chart(chart_core_apr_by_collateral, use_container_width=True)
     st.plotly_chart(chart_core_debt_by_collateral, use_container_width=True)
 with chart_col2:
+    st.plotly_chart(chart_core_account_activity_daily, use_container_width=True)
     st.plotly_chart(chart_core_apr_rewards_by_collateral, use_container_width=True)
     st.plotly_chart(chart_core_rewards_usd_by_collateral, use_container_width=True)
