@@ -37,7 +37,7 @@ def fetch_data(chain, start_date, end_date):
             short_rate_apr,
             price,
             skew,
-            size_usd,
+            market_oi_usd,
             short_oi_pct,
             long_oi_pct
         FROM {api.environment}_{chain}.fct_perp_market_history_{chain}
@@ -120,8 +120,8 @@ def make_charts(data, asset):
         "oi": chart_lines(
             df_market,
             "ts",
-            ["size_usd"],
-            "Open Interest: Total",
+            ["market_oi_usd"],
+            "Market Open Interest",
         ),
         "oi_pct": chart_oi(
             df_market,
