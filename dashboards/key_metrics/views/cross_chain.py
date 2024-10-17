@@ -159,26 +159,20 @@ if st.session_state.chain in [*SUPPORTED_CHAINS_CORE, "all"]:
         x_col="ts",
         y_cols="collateral_value",
         title="TVL",
-        color="chain",
-        hover_template="%{fullData.name}: %{y:$.3s}<extra></extra>",
-        custom_data={
-            "df": data["core_stats_totals"][["ts", "collateral_value"]],
-            "name": "Total",
-            "hover_template": "<b>%{fullData.name}: %{y:$.3s}</b><extra></extra>",
-        },
+        color_by="chain",
+        human_format=True,
+        sort_by_last_value=True,
+        custom_agg=[dict(field="collateral_value", name="Total", agg="sum")],
     )
     chart_core_tvl_by_collateral = chart_area(
         data["core_stats_by_collateral"],
         x_col="ts",
         y_cols="collateral_value",
         title="TVL by Collateral",
-        color="label",
-        hover_template="%{fullData.name}: %{y:$.3s}<extra></extra>",
-        custom_data={
-            "df": data["core_stats_totals"][["ts", "collateral_value"]],
-            "name": "Total",
-            "hover_template": "<b>%{fullData.name}: %{y:$.3s}</b><extra></extra>",
-        },
+        color_by="label",
+        human_format=True,
+        sort_by_last_value=True,
+        custom_agg=[dict(field="collateral_value", name="Total", agg="sum")],
     )
     chart_core_apr_by_collateral = chart_lines(
         data["core_stats_by_collateral"],
@@ -204,54 +198,42 @@ if st.session_state.chain in [*SUPPORTED_CHAINS_PERPS, "all"]:
         x_col="ts",
         y_cols="volume",
         title="Perps Volume",
-        color="chain",
-        hover_template="%{fullData.name}: %{y:$.3s}<extra></extra>",
-        custom_data={
-            "df": data["perps_stats_totals"][["ts", "volume"]],
-            "name": "Total",
-            "hover_template": "<b>%{fullData.name}: %{y:$.3s}</b><extra></extra>",
-        },
+        color_by="chain",
+        human_format=True,
+        sort_by_last_value=True,
+        custom_agg=[dict(field="volume", name="Total", agg="sum")],
     )
     chart_perps_account_activity_daily = chart_bars(
         data["perps_account_activity_daily"],
         x_col="date",
         y_cols="nof_accounts",
         title="Perps Active Accounts",
-        color="chain",
+        color_by="chain",
+        human_format=True,
+        sort_by_last_value=True,
+        custom_agg=[dict(field="nof_accounts", name="Total", agg="sum")],
         y_format="#",
         help_text="Number of daily unique accounts that have at least one settled order",
-        hover_template="%{fullData.name}: %{y:,.0f}<extra></extra>",
-        custom_data={
-            "df": data["perps_account_activity_totals"][["date", "nof_accounts"]],
-            "name": "Total",
-            "hover_template": "<b>%{fullData.name}: %{y:,.0f}</b><extra></extra>",
-        },
     )
     chart_perps_fees_by_chain = chart_bars(
         data["perps_stats"],
         x_col="ts",
         y_cols="exchange_fees",
         title="Perps Fees",
-        color="chain",
-        hover_template="%{fullData.name}: %{y:$.3s}<extra></extra>",
-        custom_data={
-            "df": data["perps_stats_totals"][["ts", "exchange_fees"]],
-            "name": "Total",
-            "hover_template": "<b>%{fullData.name}: %{y:$.3s}</b><extra></extra>",
-        },
+        color_by="chain",
+        human_format=True,
+        sort_by_last_value=True,
+        custom_agg=[dict(field="exchange_fees", name="Total", agg="sum")],
     )
     chart_perps_oi_by_chain = chart_area(
         data["open_interest"],
         x_col="ts",
         y_cols="total_oi_usd",
         title="Open Interest",
-        color="chain",
-        hover_template="%{fullData.name}: %{y:$.3s}<extra></extra>",
-        custom_data={
-            "df": data["open_interest"][["ts", "total_oi_usd"]],
-            "name": "Total",
-            "hover_template": "<b>%{fullData.name}: %{y:$.3s}</b><extra></extra>",
-        },
+        color_by="chain",
+        human_format=True,
+        sort_by_last_value=True,
+        custom_agg=[dict(field="total_oi_usd", name="Total", agg="sum")],
     )
 
     perps_chart_col1, perps_chart_col2 = st.columns(2)

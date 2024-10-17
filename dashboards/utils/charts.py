@@ -3,8 +3,13 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from typing import List, Optional, Union, Any, Dict
+from dashboards.utils.formatting import human_format as format_func
 
 # Constants
+AGGS = {
+    "sum": np.sum,
+}
+HOVER_PREFIX_MAP = {"$": "$", "#": "", "%": "%"}
 SEQUENTIAL_COLORS = [
     "#E5FAFF",
     "#B7F2FF",
@@ -46,8 +51,6 @@ def update_layout(
     fig,
     orientation: str = "v",
     help_text: Optional[str] = None,
-    custom_data: Optional[Dict[str, Any]] = None,
-    hover_template: Optional[str] = None,
 ):
     """Apply common layout updates to the figure.
 
@@ -60,9 +63,6 @@ def update_layout(
     """
     fig.update_xaxes(title_text="", automargin=True)
     fig.update_yaxes(title_text="")
-    fig.update_traces(hovertemplate=None)
-
-    # Add help text annotation to top-right corner of chart
     if help_text is not None:
         fig.update_layout(
             annotations=[
@@ -85,31 +85,6 @@ def update_layout(
                 )
             ]
         )
-
-    # Format the chart's hover tooltip
-    for t in fig.data:
-        t.hovertemplate = hover_template
-
-    # Add custom data to chart
-    if custom_data is not None:
-        custom_df = custom_data.get("df")
-        if isinstance(custom_df, pd.DataFrame) and not custom_df.empty:
-            line_color = custom_data.get("line_color", DEFAULT_LINE_COLOR)
-            line_width = custom_data.get("line_width", DEFAULT_LINE_WIDTH)
-            custom_trace = go.Scatter(
-                x=custom_df.iloc[:, 0],
-                y=custom_df.iloc[:, 1],
-                mode="lines",
-                line=dict(color=line_color, width=line_width),
-                name=custom_data.get("name", "Custom Data"),
-                showlegend=custom_data.get("showlegend", False),
-            )
-            fig.add_trace(custom_trace)
-        for t in fig.data:
-            if t.name == custom_data.get("name", "Custom Data"):
-                t.hovertemplate = custom_data.get("hover_template", None)
-
-    # Add legend to chart and set hover mode
     fig.update_layout(
         hovermode=f"{'y' if orientation == 'h' else 'x'} unified",
         legend=dict(
@@ -181,25 +156,34 @@ def chart_bars(
     x_col: str,
     y_cols: Union[str, List[str]],
     title: str,
-    color: Optional[str] = None,
+    color_by: Optional[str] = None,
     x_format: str = "#",
     y_format: str = "$",
     column: bool = False,
     barmode: str = "relative",
     help_text: Optional[str] = None,
-    custom_data: Optional[Dict[str, Any]] = None,
-    hover_template: Optional[str] = None,
+    human_format: bool = False,
+    custom_agg: Optional[Dict[str, str]] = None,
+    sort_by_last_value: bool = False,
+    sort_ascending: bool = False,
 ):
     """Create a bar chart."""
-    fig = px.bar(
+    traces = _create_traces(
         df,
-        x=x_col,
-        y=y_cols,
+        x_col,
+        y_cols,
+        color_by,
+        custom_agg,
+        human_format,
+        sort_by_last_value,
+        sort_ascending,
+        y_format,
+    )
+    fig = go.Figure(traces)
+    fig.update_layout(
         title=title,
-        color=color,
-        color_discrete_sequence=CATEGORICAL_COLORS,
         template=PLOTLY_TEMPLATE,
-        orientation="h" if column else "v",
+        font=dict(family=FONT_FAMILY),
         barmode=barmode,
     )
     fig = set_axes(fig, x_format, y_format)
@@ -207,42 +191,47 @@ def chart_bars(
         fig,
         orientation="h" if column else "v",
         help_text=help_text,
-        custom_data=custom_data,
-        hover_template=hover_template,
     )
 
 
 def chart_area(
     df,
     x_col: str,
-    y_cols: Union[str, List[str]],
+    y_cols: List[str],
     title: str,
-    color: Optional[str] = None,
+    color_by: Optional[str] = None,
     x_format: str = "#",
     y_format: str = "$",
     column: bool = False,
+    sort_by_last_value: bool = False,
+    sort_ascending: bool = False,
     help_text: Optional[str] = None,
-    custom_data: Optional[Dict[str, Any]] = None,
-    hover_template: Optional[str] = None,
+    human_format: bool = False,
+    custom_agg: Optional[Dict[str, str]] = None,
 ):
     """Create an area chart."""
-    fig = px.area(
+    traces = _create_traces(
         df,
-        x=x_col,
-        y=y_cols,
-        title=title,
-        color=color,
-        color_discrete_sequence=CATEGORICAL_COLORS,
-        template=PLOTLY_TEMPLATE,
+        x_col,
+        y_cols,
+        color_by,
+        custom_agg,
+        human_format,
+        sort_by_last_value,
+        sort_ascending,
+        y_format,
     )
-    fig.update_traces(hovertemplate=None)
+    fig = go.Figure(traces)
+    fig.update_layout(
+        title=title,
+        template=PLOTLY_TEMPLATE,
+        font=dict(family=FONT_FAMILY),
+    )
     fig = set_axes(fig, x_format, y_format)
     return update_layout(
         fig,
         orientation="h" if column else "v",
         help_text=help_text,
-        custom_data=custom_data,
-        hover_template=hover_template,
     )
 
 
@@ -256,8 +245,6 @@ def chart_lines(
     x_format: str = "#",
     y_format: str = "$",
     help_text: Optional[str] = None,
-    custom_data: Optional[Dict[str, Any]] = None,
-    hover_template: Optional[str] = None,
 ):
     """Create a line chart."""
     fig = px.line(
@@ -274,8 +261,6 @@ def chart_lines(
     return update_layout(
         fig,
         help_text=help_text,
-        custom_data=custom_data,
-        hover_template=hover_template,
     )
 
 
@@ -291,3 +276,76 @@ def chart_oi(df, x_col: str, title: str, help_text: Optional[str] = None):
     )
     fig.update_yaxes(tickformat=".0%")
     return update_layout(fig, help_text=help_text)
+
+
+def _create_traces(
+    df,
+    x_col: str,
+    y_cols: List[str],
+    color_by: Optional[str] = None,
+    custom_agg: Optional[Dict[str, str]] = None,
+    human_format: bool = False,
+    sort_by_last_value: bool = False,
+    sort_ascending: bool = False,
+    y_format: str = "$",
+):
+    traces = []
+    if color_by is not None:
+        for i, (label, group) in enumerate(df.groupby(color_by)):
+            _color = CATEGORICAL_COLORS[i % len(CATEGORICAL_COLORS)]
+            traces.append(
+                go.Scatter(
+                    x=group[x_col],
+                    y=group[y_cols],
+                    name=label,
+                    legendrank=0,
+                    line=dict(width=2, color=_color),
+                    mode="lines",
+                    stackgroup="one",
+                    customdata=(
+                        group[y_cols].apply(format_func)
+                        if human_format
+                        else group[y_cols]
+                    ),
+                    hovertemplate=f"<extra></extra>%{{fullData.name}}: {HOVER_PREFIX_MAP[y_format]}%{{customdata}}",
+                )
+            )
+    else:
+        for i, y_col in enumerate(y_cols):
+            _color = CATEGORICAL_COLORS[i % len(CATEGORICAL_COLORS)]
+            traces.append(
+                go.Scatter(
+                    x=df[x_col],
+                    y=df[y_col],
+                    name=y_col,
+                    legendrank=0,
+                    line=dict(width=2, color=_color),
+                )
+            )
+    if sort_by_last_value:
+        traces.sort(key=lambda trace: trace["y"][-1], reverse=not sort_ascending)
+    for rank, trace in enumerate(traces):
+        trace["legendrank"] = rank
+
+    if custom_agg is not None:
+        for custom_agg in custom_agg:
+            field = custom_agg.get("field")
+            name = custom_agg.get("name", "Custom Field")
+            agg = custom_agg.get("agg", "sum")
+            y = df.groupby(x_col)[field].agg(AGGS[agg]).reset_index()
+            traces.append(
+                go.Scatter(
+                    x=y[x_col],
+                    y=y[field],
+                    name=name,
+                    legendrank=1000,
+                    line=dict(width=0),
+                    customdata=(
+                        y[field].apply(format_func) if human_format else y[field]
+                    ),
+                    showlegend=False,
+                    hovertemplate=f"<extra></extra><b>%{{fullData.name}}: {HOVER_PREFIX_MAP[y_format]}%{{customdata}}</b>",
+                )
+            )
+
+    return traces
