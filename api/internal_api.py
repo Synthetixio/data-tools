@@ -16,6 +16,7 @@ def get_db_config(streamlit=True):
         DB_PASS = st.secrets.database.DB_PASS
         DB_HOST = st.secrets.database.DB_HOST
         DB_PORT = st.secrets.database.DB_PORT
+        DB_ENV = st.secrets.database.DB_ENV
     else:
         load_dotenv()
         DB_NAME = os.environ.get("DB_NAME")
@@ -23,6 +24,7 @@ def get_db_config(streamlit=True):
         DB_PASS = os.environ.get("DB_PASS")
         DB_HOST = os.environ.get("DB_HOST")
         DB_PORT = os.environ.get("DB_PORT")
+        DB_ENV = os.environ.get("DB_ENV")
 
     return {
         "dbname": DB_NAME,
@@ -30,10 +32,11 @@ def get_db_config(streamlit=True):
         "password": DB_PASS,
         "host": DB_HOST,
         "port": DB_PORT,
+        "env": DB_ENV,
     }
 
 
-def get_connection(db_config):
+def _get_connection(db_config):
     connection_string = f"postgresql://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['dbname']}"
     engine = sqlalchemy.create_engine(connection_string)
     conn = engine.connect()
@@ -57,8 +60,13 @@ class SynthetixAPI:
         Args:
             environment (str): The environment to query data for ('prod' or 'dev')
         """
-        self.environment = environment
         self.db_config = get_db_config(streamlit)
+
+        if db_config["env"] is not None:
+            self.environment = self.db_config["env"]
+        else:
+            self.environment = environment
+
         self.engine = self._create_engine()
         self.Session = sessionmaker(bind=self.engine)
 
@@ -74,7 +82,7 @@ class SynthetixAPI:
         self.engine.dispose()
 
     @contextmanager
-    def get_connection(
+    def _get_connection(
         self,
     ) -> Generator[sqlalchemy.engine.base.Connection, None, None]:
         """Context manager for database connections."""
@@ -94,15 +102,15 @@ class SynthetixAPI:
         Returns:
             pandas.DataFrame: The query results.
         """
-        with self.get_connection() as conn:
+        with self._get_connection() as conn:
             return pd.read_sql_query(query, conn)
 
     # queries
     def get_volume(
         self,
-        chain: str,
         start_date: datetime,
         end_date: datetime,
+        chain: str = "arbitrum_mainnet",
         resolution: str = "daily",
     ) -> pd.DataFrame:
         """
@@ -126,7 +134,7 @@ class SynthetixAPI:
         WHERE ts >= '{start_date}' and ts <= '{end_date}'
         ORDER BY ts
         """
-        with self.get_connection() as conn:
+        with self._get_connection() as conn:
             return pd.read_sql_query(query, conn)
 
     def get_core_stats(
@@ -158,7 +166,7 @@ class SynthetixAPI:
         GROUP BY ts, chain
         ORDER BY ts
         """
-        with self.get_connection() as conn:
+        with self._get_connection() as conn:
             return pd.read_sql_query(query, conn)
 
     def get_core_stats_by_collateral(
@@ -203,7 +211,7 @@ class SynthetixAPI:
             ts >= '{start_date}' and ts <= '{end_date}'
         ORDER BY ts
         """
-        with self.get_connection() as conn:
+        with self._get_connection() as conn:
             return pd.read_sql_query(query, conn)
 
     def get_core_account_activity(
@@ -239,7 +247,7 @@ class SynthetixAPI:
         GROUP BY 1, 2, 3
         ORDER BY 1
         """
-        with self.get_connection() as conn:
+        with self._get_connection() as conn:
             return pd.read_sql_query(query, conn)
 
     def get_core_nof_stakers(
@@ -270,7 +278,7 @@ class SynthetixAPI:
         WHERE date >= '{start_date}' and date <= '{end_date}'
         ORDER BY date
         """
-        with self.get_connection() as conn:
+        with self._get_connection() as conn:
             return pd.read_sql_query(query, conn)
 
     def get_perps_stats(
@@ -304,7 +312,7 @@ class SynthetixAPI:
             ts >= '{start_date}' and ts <= '{end_date}'
         ORDER BY ts
         """
-        with self.get_connection() as conn:
+        with self._get_connection() as conn:
             return pd.read_sql_query(query, conn)
 
     def get_perps_open_interest(
@@ -339,7 +347,7 @@ class SynthetixAPI:
         GROUP BY 1, 2
         ORDER BY 2, 1
         """
-        with self.get_connection() as conn:
+        with self._get_connection() as conn:
             return pd.read_sql_query(query, conn)
 
     def get_perps_markets_history(
@@ -358,7 +366,7 @@ class SynthetixAPI:
 
         Returns:
             pandas.DataFrame: Perps markets history with columns:
-                'ts', 'chain', 'market_symbol', 'size_usd', 'long_oi_pct', 'short_oi_pct'
+                'ts', 'chain', 'market_symbol', 'total_oi_usd', 'long_oi_pct', 'short_oi_pct'
         """
         chain_label = self.SUPPORTED_CHAINS[chain]
         query = f"""
@@ -366,7 +374,7 @@ class SynthetixAPI:
             ts,
             '{chain_label}' AS chain,
             CONCAT(market_symbol, ' (', '{chain_label}', ')') as market_symbol,
-            size_usd,
+            total_oi_usd,
             long_oi_pct,
             short_oi_pct
         FROM {self.environment}_{chain}.fct_perp_market_history_{chain}
@@ -374,7 +382,7 @@ class SynthetixAPI:
             ts >= '{start_date}' and ts <= '{end_date}'
         ORDER BY ts
         """
-        with self.get_connection() as conn:
+        with self._get_connection() as conn:
             return pd.read_sql_query(query, conn)
 
     def get_perps_account_activity(
@@ -409,7 +417,7 @@ class SynthetixAPI:
         GROUP BY 1, 2
         ORDER BY 1
         """
-        with self.get_connection() as conn:
+        with self._get_connection() as conn:
             return pd.read_sql_query(query, conn)
 
     def get_snx_token_buyback(
@@ -442,7 +450,7 @@ class SynthetixAPI:
             ts >= '{start_date}' and ts <= '{end_date}'
         ORDER BY ts
         """
-        with self.get_connection() as conn:
+        with self._get_connection() as conn:
             return pd.read_sql_query(query, conn)
 
     # V2 queries
@@ -477,7 +485,7 @@ class SynthetixAPI:
             ts >= '{start_date}' and ts <= '{end_date}'
         ORDER BY ts
         """
-        with self.get_connection() as conn:
+        with self._get_connection() as conn:
             return pd.read_sql_query(query, conn)
 
     def get_perps_v2_open_interest(
@@ -510,5 +518,5 @@ class SynthetixAPI:
             ts >= '{start_date}' and ts <= '{end_date}'
         ORDER BY ts
         """
-        with self.get_connection() as conn:
+        with self._get_connection() as conn:
             return pd.read_sql_query(query, conn)
