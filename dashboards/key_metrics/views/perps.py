@@ -3,7 +3,7 @@ from datetime import datetime
 import streamlit as st
 import pandas as pd
 
-from dashboards.utils.charts import chart_bars, chart_lines, chart_oi
+from dashboards.utils.charts import chart_bars, chart_area
 from dashboards.utils.date_utils import get_start_date
 from dashboards.key_metrics.constants import SUPPORTED_CHAINS_PERPS
 
@@ -35,22 +35,11 @@ def fetch_data(date_range, chain):
         for current_chain in chains_to_fetch
         if current_chain in SUPPORTED_CHAINS_PERPS
     ]
-    perps_account_activity_daily = [
+    perps_account_activity = [
         st.session_state.api.get_perps_account_activity(
             start_date=start_date.date(),
             end_date=end_date.date(),
             chain=current_chain,
-            resolution="day",
-        )
-        for current_chain in chains_to_fetch
-        if current_chain in SUPPORTED_CHAINS_PERPS
-    ]
-    perps_account_activity_monthly = [
-        st.session_state.api.get_perps_account_activity(
-            start_date=start_date.date(),
-            end_date=end_date.date(),
-            chain=current_chain,
-            resolution="month",
         )
         for current_chain in chains_to_fetch
         if current_chain in SUPPORTED_CHAINS_PERPS
@@ -58,16 +47,7 @@ def fetch_data(date_range, chain):
 
     return {
         "perps_stats": pd.concat(perps_stats, ignore_index=True),
-        "perps_account_activity_daily": (
-            pd.concat(perps_account_activity_daily, ignore_index=True)
-            if perps_account_activity_daily
-            else pd.DataFrame()
-        ),
-        "perps_account_activity_monthly": (
-            pd.concat(perps_account_activity_monthly, ignore_index=True)
-            if perps_account_activity_monthly
-            else pd.DataFrame()
-        ),
+        "perps_account_activity": pd.concat(perps_account_activity, ignore_index=True),
     }
 
 
@@ -116,29 +96,29 @@ chart_perps_exchange_fees = chart_bars(
     ),
 )
 chart_perps_account_activity_daily = chart_bars(
-    data["perps_account_activity_daily"],
+    data["perps_account_activity"],
     x_col="date",
-    y_cols="nof_accounts",
+    y_cols="dau",
     title="Active Accounts (Daily)",
     color_by="chain",
     y_format="#",
     help_text="Number of daily unique accounts that have at least one settled order",
     custom_agg=(
-        dict(field="nof_accounts", name="Total", agg="sum")
+        dict(field="dau", name="Total", agg="sum")
         if st.session_state.chain == "all"
         else None
     ),
 )
-chart_perps_account_activity_monthly = chart_bars(
-    data["perps_account_activity_monthly"],
+chart_perps_account_activity_monthly = chart_area(
+    data["perps_account_activity"],
     x_col="date",
-    y_cols="nof_accounts",
+    y_cols="mau",
     title="Active Accounts (Monthly)",
     color_by="chain",
     y_format="#",
-    help_text="Number of monthly unique accounts that have at least one settled order",
+    help_text="Number of unique accounts that have at least one settled order in the past 28 days",
     custom_agg=(
-        dict(field="nof_accounts", name="Total", agg="sum")
+        dict(field="mau", name="Total", agg="sum")
         if st.session_state.chain == "all"
         else None
     ),

@@ -390,7 +390,6 @@ class SynthetixAPI:
         start_date: datetime,
         end_date: datetime,
         chain: str = "arbitrum_mainnet",
-        resolution: str = "day",
     ) -> pd.DataFrame:
         """
         Get perps account activity. Active accounts are those that have
@@ -400,7 +399,6 @@ class SynthetixAPI:
             start_date (datetime): Start date for the query
             end_date (datetime): End date for the query
             chain (str): Chain to query (e.g., 'arbitrum_mainnet')
-            resolution (str): Data resolution ('day' or 'month')
 
         Returns:
             pandas.DataFrame: Perps account activity with columns:
@@ -408,14 +406,38 @@ class SynthetixAPI:
         """
         chain_label = self.SUPPORTED_CHAINS[chain]
         query = f"""
+        WITH activity AS (
+            SELECT DISTINCT
+                DATE_TRUNC('day', ts) AS activity_date,
+                account_id
+            FROM {self.environment}_{chain}.fct_perp_trades_{chain}
+            WHERE DATE(ts) >= DATE('{start_date}') - INTERVAL '27 days' 
+                AND DATE(ts) <= DATE('{end_date}')
+        ),
+        date_range AS (
+            SELECT generate_series(
+                DATE('{start_date}'),
+                DATE('{end_date}'),
+                INTERVAL '1 day'
+            )::date AS activity_date
+        )
         SELECT
-            DATE_TRUNC('{resolution}', ts) AS date,
+            dr.activity_date as date,
             '{chain_label}' AS chain,
-            COUNT(DISTINCT account_id) AS nof_accounts
-        FROM {self.environment}_{chain}.fct_perp_trades_{chain}
-        WHERE ts >= '{start_date}' and ts <= '{end_date}'
-        GROUP BY 1, 2
-        ORDER BY 1
+            -- Calculate DAU: Count of unique account_ids on activity_date
+            (SELECT COUNT(DISTINCT account_id)
+             FROM activity
+             WHERE activity.activity_date = dr.activity_date
+            ) AS dau,
+            -- Calculate MAU: Count of unique account_ids in the past 28 days
+            (SELECT COUNT(DISTINCT account_id)
+             FROM activity
+             WHERE 
+                activity.activity_date >= dr.activity_date - INTERVAL '27 days' 
+                AND activity.activity_date <= dr.activity_date
+            ) AS mau
+        FROM date_range AS dr
+        WHERE dr.activity_date BETWEEN DATE('{start_date}') AND DATE('{end_date}')
         """
         with self._get_connection() as conn:
             return pd.read_sql_query(query, conn)
