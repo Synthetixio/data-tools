@@ -407,12 +407,12 @@ class SynthetixAPI:
         chain_label = self.SUPPORTED_CHAINS[chain]
         query = f"""
         SELECT
-            activity_date as date,
+            ts as date,
             '{chain_label}' AS chain,
             dau,
             mau
         FROM {self.environment}_{chain}.fct_perp_account_activity_{chain}
-        WHERE activity_date BETWEEN DATE('{start_date}') AND DATE('{end_date}')
+        WHERE ts BETWEEN DATE('{start_date}') AND DATE('{end_date}')
         """
         with self._get_connection() as conn:
             return pd.read_sql_query(query, conn)
