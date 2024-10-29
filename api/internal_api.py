@@ -406,38 +406,13 @@ class SynthetixAPI:
         """
         chain_label = self.SUPPORTED_CHAINS[chain]
         query = f"""
-        WITH activity AS (
-            SELECT DISTINCT
-                DATE_TRUNC('day', ts) AS activity_date,
-                account_id
-            FROM {self.environment}_{chain}.fct_perp_trades_{chain}
-            WHERE DATE(ts) >= DATE('{start_date}') - INTERVAL '27 days' 
-                AND DATE(ts) <= DATE('{end_date}')
-        ),
-        date_range AS (
-            SELECT generate_series(
-                DATE('{start_date}'),
-                DATE('{end_date}'),
-                INTERVAL '1 day'
-            )::date AS activity_date
-        )
         SELECT
-            dr.activity_date as date,
+            activity_date as date,
             '{chain_label}' AS chain,
-            -- Calculate DAU: Count of unique account_ids on activity_date
-            (SELECT COUNT(DISTINCT account_id)
-             FROM activity
-             WHERE activity.activity_date = dr.activity_date
-            ) AS dau,
-            -- Calculate MAU: Count of unique account_ids in the past 28 days
-            (SELECT COUNT(DISTINCT account_id)
-             FROM activity
-             WHERE 
-                activity.activity_date >= dr.activity_date - INTERVAL '27 days' 
-                AND activity.activity_date <= dr.activity_date
-            ) AS mau
-        FROM date_range AS dr
-        WHERE dr.activity_date BETWEEN DATE('{start_date}') AND DATE('{end_date}')
+            dau,
+            mau
+        FROM {self.environment}_{chain}.fct_perp_account_activity_{chain}
+        WHERE activity_date BETWEEN DATE('{start_date}') AND DATE('{end_date}')
         """
         with self._get_connection() as conn:
             return pd.read_sql_query(query, conn)
