@@ -35,10 +35,11 @@ st.session_state.api = load_api()
 core = st.Page("views/core.py", title="Core System")
 perps = st.Page("views/perps.py", title="Perps Markets")
 performance = st.Page("views/performance.py", title="Query Performance")
+depth = st.Page("views/depth.py", title="Market Depth")
 
 # navigation
 pages = {
-    "": [core, perps, performance],
+    "": [core, perps, performance, depth],
 }
 nav = st.navigation(pages)
 nav.run()
