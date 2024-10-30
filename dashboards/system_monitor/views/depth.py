@@ -218,7 +218,16 @@ st.selectbox("Market", list(markets.keys()), key="market_name")
 st.markdown("## Market Depth")
 df_depth = get_depth(st.session_state.snx, st.session_state.market_name)
 
-st.dataframe(format_depth(df_depth), use_container_width=True)
+st.dataframe(
+    format_depth(df_depth[df_depth["order_size_usd"].isin(USD_POSITION_SIZES)]),
+    use_container_width=True,
+)
+
+st.markdown("#### Max Maker Order")
+st.dataframe(
+    format_depth(df_depth[~df_depth["order_size_usd"].isin(USD_POSITION_SIZES)]),
+    use_container_width=True,
+)
 
 df_market_info = get_market_info(st.session_state.snx, st.session_state.market_name)
 st.dataframe(df_market_info, use_container_width=True)
