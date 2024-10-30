@@ -119,6 +119,7 @@ def clean_markets(configs):
         axis=1,
     )
     configs["oi_used_pct"] = configs["oi_used"].map("{:.2%}".format)
+    configs.sort_values("open_interest", ascending=False, inplace=True)
     return configs
 
 
