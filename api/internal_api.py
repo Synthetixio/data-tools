@@ -162,7 +162,7 @@ class SynthetixAPI:
             SUM(collateral_value) AS collateral_value
         FROM {self.environment}_{chain}.fct_core_apr_{chain}
         WHERE 
-            ts >= '{start_date}' and ts <= '{end_date}'
+            DATE(ts) >= '{start_date}' and DATE(ts) <= '{end_date}'
         GROUP BY ts, chain
         ORDER BY ts
         """
@@ -208,7 +208,7 @@ class SynthetixAPI:
         LEFT JOIN {self.environment}_seeds.{chain}_tokens AS tokens
             ON lower(stats.collateral_type) = lower(tokens.token_address)
         WHERE 
-            ts >= '{start_date}' and ts <= '{end_date}'
+            DATE(ts) >= '{start_date}' and DATE(ts) <= '{end_date}'
         ORDER BY ts
         """
         with self._get_connection() as conn:
@@ -243,7 +243,7 @@ class SynthetixAPI:
             account_action as action,
             COUNT(DISTINCT account_id) AS nof_accounts
         FROM {self.environment}_{chain}.fct_core_account_activity_{chain}
-        WHERE block_timestamp >= '{start_date}' and block_timestamp <= '{end_date}'
+        WHERE DATE(block_timestamp) >= '{start_date}' and DATE(block_timestamp) <= '{end_date}'
         GROUP BY 1, 2, 3
         ORDER BY 1
         """
@@ -309,7 +309,7 @@ class SynthetixAPI:
             exchange_fees
         FROM {self.environment}_{chain}.fct_perp_stats_{resolution}_{chain}
         WHERE
-            ts >= '{start_date}' and ts <= '{end_date}'
+            DATE(ts) >= '{start_date}' and DATE(ts) <= '{end_date}'
         ORDER BY ts
         """
         with self._get_connection() as conn:
@@ -343,7 +343,7 @@ class SynthetixAPI:
             MAX(total_oi_usd) as total_oi_usd
         FROM {self.environment}_{chain}.fct_perp_market_history_{chain}
         WHERE
-            ts >= '{start_date}' and ts <= '{end_date}'
+            DATE(ts) >= '{start_date}' and DATE(ts) <= '{end_date}'
         GROUP BY 1, 2
         ORDER BY 2, 1
         """
@@ -379,7 +379,7 @@ class SynthetixAPI:
             short_oi_pct
         FROM {self.environment}_{chain}.fct_perp_market_history_{chain}
         WHERE
-            ts >= '{start_date}' and ts <= '{end_date}'
+            DATE(ts) >= '{start_date}' and DATE(ts) <= '{end_date}'
         ORDER BY ts
         """
         with self._get_connection() as conn:
@@ -412,7 +412,7 @@ class SynthetixAPI:
             dau,
             mau
         FROM {self.environment}_{chain}.fct_perp_account_activity_{chain}
-        WHERE ts BETWEEN DATE('{start_date}') AND DATE('{end_date}')
+        WHERE DATE(ts) >= DATE('{start_date}') AND DATE(ts) <= DATE('{end_date}')
         """
         with self._get_connection() as conn:
             return pd.read_sql_query(query, conn)
@@ -444,7 +444,7 @@ class SynthetixAPI:
             usd_amount
         FROM {self.environment}_{chain}.fct_buyback_daily_{chain}
         WHERE
-            ts >= '{start_date}' and ts <= '{end_date}'
+            DATE(ts) >= '{start_date}' AND DATE(ts) <= '{end_date}'
         ORDER BY ts
         """
         with self._get_connection() as conn:
@@ -479,7 +479,7 @@ class SynthetixAPI:
             exchange_fees + liquidation_fees as exchange_fees
         FROM {self.environment}_{chain}.fct_v2_stats_{resolution}_{chain}
         WHERE
-            ts >= '{start_date}' and ts <= '{end_date}'
+            DATE(ts) >= '{start_date}' AND DATE(ts) <= '{end_date}'
         ORDER BY ts
         """
         with self._get_connection() as conn:
@@ -512,7 +512,7 @@ class SynthetixAPI:
             total_oi_usd
         FROM {self.environment}_{chain}.fct_v2_stats_{resolution}_{chain}
         WHERE
-            ts >= '{start_date}' and ts <= '{end_date}'
+            DATE(ts) >= '{start_date}' AND DATE(ts) <= '{end_date}'
         ORDER BY ts
         """
         with self._get_connection() as conn:
