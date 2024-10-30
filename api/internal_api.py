@@ -390,7 +390,6 @@ class SynthetixAPI:
         start_date: datetime,
         end_date: datetime,
         chain: str = "arbitrum_mainnet",
-        resolution: str = "day",
     ) -> pd.DataFrame:
         """
         Get perps account activity. Active accounts are those that have
@@ -400,7 +399,6 @@ class SynthetixAPI:
             start_date (datetime): Start date for the query
             end_date (datetime): End date for the query
             chain (str): Chain to query (e.g., 'arbitrum_mainnet')
-            resolution (str): Data resolution ('day' or 'month')
 
         Returns:
             pandas.DataFrame: Perps account activity with columns:
@@ -409,13 +407,12 @@ class SynthetixAPI:
         chain_label = self.SUPPORTED_CHAINS[chain]
         query = f"""
         SELECT
-            DATE_TRUNC('{resolution}', ts) AS date,
+            ts as date,
             '{chain_label}' AS chain,
-            COUNT(DISTINCT account_id) AS nof_accounts
-        FROM {self.environment}_{chain}.fct_perp_trades_{chain}
-        WHERE ts >= '{start_date}' and ts <= '{end_date}'
-        GROUP BY 1, 2
-        ORDER BY 1
+            dau,
+            mau
+        FROM {self.environment}_{chain}.fct_perp_account_activity_{chain}
+        WHERE ts BETWEEN DATE('{start_date}') AND DATE('{end_date}')
         """
         with self._get_connection() as conn:
             return pd.read_sql_query(query, conn)

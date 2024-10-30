@@ -70,12 +70,11 @@ def fetch_data(date_range, chain):
         for current_chain in chains_to_fetch
         if current_chain in SUPPORTED_CHAINS_PERPS
     ]
-    perps_account_activity_daily = [
+    perps_account_activity = [
         st.session_state.api.get_perps_account_activity(
             start_date=start_date.date(),
             end_date=end_date.date(),
             chain=current_chain,
-            resolution="day",
         )
         for current_chain in chains_to_fetch
         if current_chain in SUPPORTED_CHAINS_PERPS
@@ -98,11 +97,7 @@ def fetch_data(date_range, chain):
             if open_interest
             else pd.DataFrame()
         ),
-        "perps_account_activity_daily": (
-            pd.concat(perps_account_activity_daily, ignore_index=True)
-            if perps_account_activity_daily
-            else pd.DataFrame()
-        ),
+        "perps_account_activity": pd.concat(perps_account_activity, ignore_index=True),
     }
 
 
@@ -179,13 +174,13 @@ if st.session_state.chain in [*SUPPORTED_CHAINS_PERPS, "all"]:
         ),
     )
     chart_perps_account_activity_daily = chart_bars(
-        data["perps_account_activity_daily"],
+        data["perps_account_activity"],
         x_col="date",
-        y_cols="nof_accounts",
+        y_cols="dau",
         title="Perps Active Accounts",
         color_by="chain",
         custom_agg=(
-            dict(field="nof_accounts", name="Total", agg="sum")
+            dict(field="dau", name="Total", agg="sum")
             if st.session_state.chain == "all"
             else None
         ),
