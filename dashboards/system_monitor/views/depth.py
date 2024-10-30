@@ -162,6 +162,9 @@ def get_depth(snx, market_name):
 
     # add columns
     df["total_fee_usd"] = df["order_fees"] + df["settlement_reward_cost"]
+    df["premium_discount_pct"] = (df["fill_price"] - df["index_price"]) / df[
+        "index_price"
+    ]
     df["price_impact_pct"] = (
         abs(df["fill_price"] - df["index_price"]) / df["index_price"]
     )
@@ -174,6 +177,7 @@ def get_depth(snx, market_name):
         "order_size_usd",
         "index_price",
         "fill_price",
+        "premium_discount_pct",
         "price_impact_pct",
         "total_fee_usd",
         "total_fee_pct",
@@ -230,7 +234,7 @@ st.dataframe(
 )
 
 df_market_info = get_market_info(st.session_state.snx, st.session_state.market_name)
-st.dataframe(df_market_info, use_container_width=True)
+st.dataframe(df_market_info)
 
 # charts
 # col1, col2 = st.columns(2)
