@@ -4,6 +4,8 @@ import pandas as pd
 from synthetix import Synthetix
 from api.internal_api import SynthetixAPI, get_db_config
 from dashboards.system_monitor.modules.settings import settings
+from dashboards.utils.charts import chart_lines, chart_bars
+
 
 PERPS_NETWORKS = [
     8453,
@@ -32,11 +34,70 @@ USD_POSITION_SIZES = [
 ]
 
 
+def plot_impact(df):
+    """Create a price impact analysis chart.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing the data for the chart.
+
+    Returns:
+        plotly.graph_objs._figure.Figure: The generated chart.
+    """
+    fig = chart_lines(
+        df,
+        x_col="order_size_usd",
+        y_cols="price_impact_pct",
+        title="Price Impact",
+        x_format="$",
+        y_format="%",
+        smooth=True,
+    )
+    return fig
+
+
+def plot_depth(df):
+    """Create a depth analysis chart.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing the data for the chart.
+
+    Returns:
+        plotly.graph_objs._figure.Figure: The generated chart.
+    """
+    fig = chart_lines(
+        df,
+        x_col="fill_price",
+        y_cols="order_size_usd",
+        title="Depth",
+        x_format="$",
+        y_format="$",
+        smooth=True,
+    )
+    return fig
+
+
 def get_markets(snx):
+    """Retrieve the markets from the Synthetix instance.
+
+    Args:
+        snx (Synthetix): The Synthetix instance.
+
+    Returns:
+        dict: A dictionary of markets by name.
+    """
     return snx.perps.markets_by_name
 
 
 def get_market_info(snx, market_name):
+    """Retrieve market information for a specific market.
+
+    Args:
+        snx (Synthetix): The Synthetix instance.
+        market_name (str): The name of the market.
+
+    Returns:
+        pd.DataFrame: DataFrame containing the market information.
+    """
     market_info = snx.perps.markets_by_name[market_name]
 
     df_market_info = pd.DataFrame().from_dict(
@@ -71,6 +132,15 @@ def get_market_info(snx, market_name):
 
 @st.cache_data(ttl=600, hash_funcs={Synthetix: lambda x: x.network_id})
 def get_depth(snx, market_name):
+    """Retrieve the depth information for a specific market.
+
+    Args:
+        snx (Synthetix): The Synthetix instance.
+        market_name (str): The name of the market.
+
+    Returns:
+        pd.DataFrame: DataFrame containing the depth information.
+    """
     market_info = snx.perps.markets_by_name[market_name]
     price = market_info["index_price"]
     skew = market_info["skew"]
@@ -100,16 +170,6 @@ def get_depth(snx, market_name):
     df["total_fee_pct"] = df["total_fee_usd"] / df["order_size_usd"]
     df["funding_per_hour_usd"] = funding_rate_1h * df["order_size_usd"]
 
-    pct_cols = [c for c in df.columns if c.endswith("_pct")]
-    df[pct_cols] = df[pct_cols].applymap(lambda x: f"{x:.3%}")
-
-    usd_cols = [
-        c
-        for c in df.columns
-        if c.endswith("_usd") or c.endswith("_fees") or c.endswith("_price")
-    ]
-    df[usd_cols] = df[usd_cols].applymap(lambda x: f"${x:,.2f}")
-
     cols = [
         "order_size_usd",
         "index_price",
@@ -126,6 +186,28 @@ def get_depth(snx, market_name):
     return df[cols]
 
 
+def format_depth(df):
+    """Format the depth DataFrame for display.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing the depth information.
+
+    Returns:
+        pd.DataFrame: Formatted DataFrame.
+    """
+    df = df.copy()
+    pct_cols = [c for c in df.columns if c.endswith("_pct")]
+    df[pct_cols] = df[pct_cols].applymap(lambda x: f"{x:.3%}")
+
+    usd_cols = [
+        c
+        for c in df.columns
+        if c.endswith("_usd") or c.endswith("_fees") or c.endswith("_price")
+    ]
+    df[usd_cols] = df[usd_cols].applymap(lambda x: f"${x:,.2f}")
+    return df
+
+
 # add the settings dropdown
 settings(enabled_markets=PERPS_NETWORKS)
 
@@ -136,7 +218,16 @@ st.selectbox("Market", list(markets.keys()), key="market_name")
 st.markdown("## Market Depth")
 df_depth = get_depth(st.session_state.snx, st.session_state.market_name)
 
-st.dataframe(df_depth, use_container_width=True)
+st.dataframe(format_depth(df_depth), use_container_width=True)
 
 df_market_info = get_market_info(st.session_state.snx, st.session_state.market_name)
 st.dataframe(df_market_info, use_container_width=True)
+
+# charts
+# col1, col2 = st.columns(2)
+
+# with col1:
+#     st.plotly_chart(plot_impact(df_depth), use_container_width=True)
+
+# with col2:
+#     st.plotly_chart(plot_depth(df_depth), use_container_width=True)
