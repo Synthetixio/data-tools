@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 
 from synthetix import Synthetix
+from synthetix.utils.multicall import multicall_erc7412, call_erc7412
+from synthetix.utils import ether_to_wei, wei_to_ether
 from api.internal_api import SynthetixAPI, get_db_config
 from dashboards.system_monitor.modules.settings import settings
 from dashboards.utils.charts import chart_lines, chart_bars
@@ -14,7 +16,11 @@ PERPS_NETWORKS = [
     421614,
 ]
 
-USD_POSITION_SIZES = [
+ALL_USD_POSITION_SIZES = [-10000, -1000, -100, 100, 1000, 10000] + list(
+    range(-10000000, 10000000, 50000)
+)
+
+DISPLAY_USD_POSITION_SIZES = [
     10000000,
     5000000,
     1000000,
@@ -52,6 +58,9 @@ def plot_impact(df):
         y_format="%",
         smooth=True,
     )
+    # add axis labels
+    fig.update_xaxes(title_text="Order Size")
+    fig.update_yaxes(title_text="Price Impact %")
     return fig
 
 
@@ -66,13 +75,15 @@ def plot_depth(df):
     """
     fig = chart_lines(
         df,
-        x_col="fill_price",
-        y_cols="order_size_usd",
+        x_col="order_size_usd",
+        y_cols="fill_price",
         title="Depth",
         x_format="$",
         y_format="$",
         smooth=True,
     )
+    fig.update_xaxes(title_text="Order Size")
+    fig.update_yaxes(title_text="Fill Price")
     return fig
 
 
@@ -149,15 +160,45 @@ def get_depth(snx, market_name):
     funding_rate_1h = funding_rate_24h / 24
 
     # check the market depth at various sizes
-    position_sizes = USD_POSITION_SIZES + [-skew_usd]
-    position_sizes.sort(reverse=True)
+    position_sizes_usd = ALL_USD_POSITION_SIZES + [-skew_usd]
+    position_sizes_usd.sort(reverse=True)
+    position_sizes = [size / price for size in position_sizes_usd]
+
+    order_fees_result = multicall_erc7412(
+        snx,
+        snx.perps.market_proxy,
+        "computeOrderFeesWithPrice",
+        [
+            (market_info["market_id"], ether_to_wei(size), ether_to_wei(price))
+            for size in position_sizes
+        ],
+    )
+
+    settlement_reward_cost = call_erc7412(
+        snx,
+        snx.perps.market_proxy,
+        "getSettlementRewardCost",
+        (market_info["market_id"], 0),
+    )
+    settlement_reward_cost = wei_to_ether(settlement_reward_cost)
+
     depths = {}
-    for size in position_sizes:
-        position_size = size / price
-        depths[size] = snx.perps.get_quote(position_size, market_name=market_name)
+    for size_usd, size, fee_result in zip(
+        position_sizes_usd, position_sizes, order_fees_result
+    ):
+        order_fees = wei_to_ether(fee_result[0])
+        fill_price = wei_to_ether(fee_result[1])
+
+        depths[size_usd] = {
+            "order_size_usd": size_usd,
+            "order_size": size,
+            "order_fees": order_fees,
+            "fill_price": fill_price,
+            "index_price": price,
+            "settlement_reward_cost": settlement_reward_cost,
+        }
 
     df = pd.DataFrame().from_dict(depths, orient="index")
-    df.index.name = "order_size_usd"
     df = df.reset_index()
 
     # add columns
@@ -168,7 +209,7 @@ def get_depth(snx, market_name):
     df["price_impact_pct"] = (
         abs(df["fill_price"] - df["index_price"]) / df["index_price"]
     )
-    df["order_fee_pct"] = df["order_fees"] / df["order_size_usd"]
+    df["order_fee_pct"] = abs(df["order_fees"] / df["order_size_usd"])
     df["settlement_fee_pct"] = df["settlement_reward_cost"] / df["order_size_usd"]
     df["total_fee_pct"] = df["total_fee_usd"] / df["order_size_usd"]
     df["funding_per_hour_usd"] = funding_rate_1h * df["order_size_usd"]
@@ -223,13 +264,13 @@ st.markdown("## Market Depth")
 df_depth = get_depth(st.session_state.snx, st.session_state.market_name)
 
 st.dataframe(
-    format_depth(df_depth[df_depth["order_size_usd"].isin(USD_POSITION_SIZES)]),
+    format_depth(df_depth[df_depth["order_size_usd"].isin(DISPLAY_USD_POSITION_SIZES)]),
     use_container_width=True,
 )
 
 st.markdown("#### Max Maker Order")
 st.dataframe(
-    format_depth(df_depth[~df_depth["order_size_usd"].isin(USD_POSITION_SIZES)]),
+    format_depth(df_depth[~df_depth["order_size_usd"].isin(ALL_USD_POSITION_SIZES)]),
     use_container_width=True,
 )
 
@@ -237,10 +278,10 @@ df_market_info = get_market_info(st.session_state.snx, st.session_state.market_n
 st.dataframe(df_market_info)
 
 # charts
-# col1, col2 = st.columns(2)
+col1, col2 = st.columns(2)
 
-# with col1:
-#     st.plotly_chart(plot_impact(df_depth), use_container_width=True)
+with col1:
+    st.plotly_chart(plot_impact(df_depth), use_container_width=True)
 
-# with col2:
-#     st.plotly_chart(plot_depth(df_depth), use_container_width=True)
+with col2:
+    st.plotly_chart(plot_depth(df_depth), use_container_width=True)
