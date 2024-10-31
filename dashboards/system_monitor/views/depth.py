@@ -129,6 +129,16 @@ def get_market_info(snx, market_name):
         ]
     ]
 
+    # max leverage
+    liquidation_parameters = call_erc7412(
+        snx,
+        snx.perps.market_proxy,
+        "getLiquidationParameters",
+        (market_info["market_id"]),
+    )
+    min_initial_margin_ratio = wei_to_ether(liquidation_parameters[1])
+    max_leverage = 1 / min_initial_margin_ratio
+
     pct_cols = ["current_funding_rate", "maker_fee", "taker_fee"]
     df_market_info[pct_cols] = df_market_info[pct_cols].applymap(lambda x: f"{x:.4%}")
 
@@ -138,6 +148,7 @@ def get_market_info(snx, market_name):
     df_market_info["skew_usd"] = df_market_info["skew_usd"].apply(
         lambda x: f"${x:,.2f}"
     )
+    df_market_info["max_leverage"] = f"{max_leverage:.2g}x"
     return df_market_info.transpose()
 
 
