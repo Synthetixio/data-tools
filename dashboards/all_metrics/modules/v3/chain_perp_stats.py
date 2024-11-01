@@ -4,7 +4,7 @@ import streamlit as st
 import pandas as pd
 
 from dashboards.utils.data import export_data
-from dashboards.utils.charts import chart_bars, chart_lines
+from dashboards.utils.charts import chart_bars, chart_lines, chart_area
 
 
 @st.cache_data(ttl="30m")
@@ -55,10 +55,26 @@ def fetch_data(chain, start_date, end_date, resolution):
         else pd.DataFrame()
     )
 
+    df_account_activity = api._run_query(
+        f"""
+        SELECT
+            ts,
+            new_accounts_daily,
+            dau - new_accounts_daily as returning_accounts_daily,
+            new_accounts_monthly,
+            mau - new_accounts_monthly as returning_accounts_monthly,
+            dau,
+            mau
+        FROM {api.environment}_{chain}.fct_perp_account_activity_{chain}
+        WHERE DATE(ts) >= '{start_date}' and DATE(ts) <= '{end_date}'
+        """
+    )
+
     return {
         "stats": df_stats,
         "oi": df_oi,
         "buyback": df_buyback,
+        "account_activity": df_account_activity,
     }
 
 
@@ -142,6 +158,24 @@ def make_charts(data):
             if st.session_state.chain.startswith("base")
             else None
         ),
+        "account_activity_daily": chart_bars(
+            data["account_activity"],
+            x_col="ts",
+            y_cols=["new_accounts_daily", "returning_accounts_daily"],
+            title="Daily New/Returning Accounts",
+            y_format="#",
+            help_text="Number of daily new/returning accounts that have at least one order settled",
+            custom_agg=dict(field="dau", name="Total", agg="sum"),
+        ),
+        "account_activity_monthly": chart_area(
+            data["account_activity"],
+            x_col="ts",
+            y_cols=["new_accounts_monthly", "returning_accounts_monthly"],
+            title="Monthly New/Returning Accounts",
+            y_format="#",
+            help_text="Number of new/returning accounts that have at least one order settled in the last 28 days",
+            custom_agg=dict(field="mau", name="Total", agg="sum"),
+        ),
     }
 
 
@@ -205,13 +239,13 @@ def main():
         st.plotly_chart(charts["oi"], use_container_width=True)
         st.plotly_chart(charts["account_liquidations"], use_container_width=True)
         st.plotly_chart(charts["cumulative_volume"], use_container_width=True)
-
+        st.plotly_chart(charts["account_activity_daily"], use_container_width=True)
     with col2:
         st.plotly_chart(charts["fees"], use_container_width=True)
         st.plotly_chart(charts["trades"], use_container_width=True)
         st.plotly_chart(charts["liquidation_rewards"], use_container_width=True)
         st.plotly_chart(charts["cumulative_fees"], use_container_width=True)
-
+        st.plotly_chart(charts["account_activity_monthly"], use_container_width=True)
     if st.session_state.chain.startswith("base"):
         bb_col1, bb_col2 = st.columns(2)
         with bb_col1:
