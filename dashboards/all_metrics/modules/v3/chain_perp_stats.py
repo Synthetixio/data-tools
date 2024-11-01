@@ -55,10 +55,26 @@ def fetch_data(chain, start_date, end_date, resolution):
         else pd.DataFrame()
     )
 
+    df_collateral = (
+        api._run_query(
+            f"""
+        SELECT
+            ts,
+            synth_symbol,
+            total_balance
+        FROM {api.environment}_{chain}.fct_perp_collateral_balances_{chain}
+        WHERE ts >= '{start_date}' and ts <= '{end_date}'
+        """
+        )
+        if st.session_state.chain.startswith("arbitrum")
+        else pd.DataFrame()
+    )
+
     return {
         "stats": df_stats,
         "oi": df_oi,
         "buyback": df_buyback,
+        "collateral": df_collateral,
     }
 
 
@@ -118,6 +134,18 @@ def make_charts(data):
             x_col="ts",
             y_cols="liquidation_rewards",
             title="Liquidation Rewards",
+        ),
+        "collateral": (
+            chart_lines(
+                data["collateral"],
+                x_col="ts",
+                y_cols="total_balance",
+                y_format="#",
+                color_by="synth_symbol",
+                title="Collateral Balances",
+            )
+            if st.session_state.chain.startswith("arbitrum")
+            else None
         ),
         "buyback": (
             chart_bars(
@@ -211,6 +239,9 @@ def main():
         st.plotly_chart(charts["trades"], use_container_width=True)
         st.plotly_chart(charts["liquidation_rewards"], use_container_width=True)
         st.plotly_chart(charts["cumulative_fees"], use_container_width=True)
+
+    if st.session_state.chain.startswith("arbitrum"):
+        st.plotly_chart(charts["collateral"], use_container_width=True)
 
     if st.session_state.chain.startswith("base"):
         bb_col1, bb_col2 = st.columns(2)
