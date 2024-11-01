@@ -62,7 +62,9 @@ def fetch_data(chain, start_date, end_date, resolution):
             new_accounts_daily,
             dau - new_accounts_daily as returning_accounts_daily,
             new_accounts_monthly,
-            mau - new_accounts_monthly as returning_accounts_monthly
+            mau - new_accounts_monthly as returning_accounts_monthly,
+            dau,
+            mau
         FROM {api.environment}_{chain}.fct_perp_account_activity_{chain}
         WHERE DATE(ts) >= '{start_date}' and DATE(ts) <= '{end_date}'
         """
@@ -163,6 +165,7 @@ def make_charts(data):
             title="Daily New/Returning Accounts",
             y_format="#",
             help_text="Number of daily new/returning accounts that have at least one order settled",
+            custom_agg=dict(field="dau", name="Total", agg="sum"),
         ),
         "account_activity_monthly": chart_area(
             data["account_activity"],
@@ -171,6 +174,7 @@ def make_charts(data):
             title="Monthly New/Returning Accounts",
             y_format="#",
             help_text="Number of new/returning accounts that have at least one order settled in the last 28 days",
+            custom_agg=dict(field="mau", name="Total", agg="sum"),
         ),
     }
 
