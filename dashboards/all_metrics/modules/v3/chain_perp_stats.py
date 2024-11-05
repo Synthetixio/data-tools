@@ -61,7 +61,8 @@ def fetch_data(chain, start_date, end_date, resolution):
         SELECT
             ts,
             synth_symbol,
-            total_balance
+            total_balance,
+            total_balance_usd
         FROM {api.environment}_{chain}.fct_perp_collateral_balances_{chain}
         WHERE ts >= '{start_date}' and ts <= '{end_date}'
         """
@@ -139,8 +140,8 @@ def make_charts(data):
             chart_lines(
                 data["collateral"],
                 x_col="ts",
-                y_cols="total_balance",
-                y_format="#",
+                y_cols="total_balance_usd",
+                y_format="$",
                 color_by="synth_symbol",
                 title="Collateral Balances",
             )
