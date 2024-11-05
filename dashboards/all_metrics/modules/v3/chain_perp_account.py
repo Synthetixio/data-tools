@@ -60,7 +60,8 @@ def fetch_data(chain, account_id, start_date, end_date):
             fill_price,
             total_fees,
             accrued_funding,
-            tracking_code
+            tracking_code,
+            transaction_hash
         FROM {api.environment}_{chain}.fct_perp_trades_{chain}
         WHERE account_id = '{account_id}'
             AND ts >= '{start_date}' AND ts <= '{end_date}'
@@ -73,7 +74,7 @@ def fetch_data(chain, account_id, start_date, end_date):
         SELECT
             block_timestamp,
             CAST(account_id AS TEXT) AS account_id,
-            synth_market_id,
+            synth_symbol,
             amount_delta
         FROM {api.environment}_{chain}.fct_perp_collateral_modified_{chain}
         WHERE account_id = {account_id if account_id else 'NULL'}
@@ -122,12 +123,31 @@ def fetch_data(chain, account_id, start_date, end_date):
         """
     )
 
+    # Query for collateral balances
+    df_collateral = (
+        api._run_query(
+            f"""
+        SELECT
+            ts,
+            synth_symbol,
+            event_type,
+            amount_delta,
+            account_balance,
+            account_balance_usd,
+            transaction_hash
+        FROM {api.environment}_{chain}.fct_perp_collateral_balances_{chain}
+        WHERE ts >= '{start_date}' and ts <= '{end_date}'
+            AND account_id = '{account_id}'
+        ORDER BY ts
+        """
+        )
+        if st.session_state.chain.startswith("arbitrum")
+        else pd.DataFrame()
+    )
+
     # Adjust data
     df_accounts = df_accounts[["account_id", "sender"]].drop_duplicates()
     df_accounts.columns = ["id", "owner"]
-
-    # Convert amount_delta to proper units
-    df_transfer["amount_delta"] = df_transfer["amount_delta"] / 1e18
 
     return {
         "accounts": df_accounts,
@@ -137,11 +157,24 @@ def fetch_data(chain, account_id, start_date, end_date):
         "transfer": df_transfer,
         "account_liq": df_account_liq,
         "hourly": df_hourly,
+        "collateral": df_collateral,
     }
 
 
 @st.cache_data(ttl="30m")
 def make_charts(data):
+    collateral_chart = (
+        None
+        if data["collateral"].empty
+        else chart_lines(
+            data["collateral"],
+            x_col="ts",
+            y_cols="account_balance_usd",
+            title="Collateral Balances",
+            color_by="synth_symbol",
+        )
+    )
+
     return {
         "cumulative_volume": chart_lines(
             data["hourly"],
@@ -156,6 +189,7 @@ def make_charts(data):
             title="Cumulative Fees",
             custom_agg=dict(field="cumulative_fees", name="Total", agg="sum"),
         ),
+        "collateral": collateral_chart,
     }
 
 
@@ -276,6 +310,10 @@ def main():
 
     with col2:
         st.plotly_chart(charts["cumulative_fees"], use_container_width=True)
+
+    # display collateral chart if not None
+    if charts["collateral"]:
+        st.plotly_chart(charts["collateral"], use_container_width=True)
 
     # Display recent trades
     st.markdown("### Recent Trades")
