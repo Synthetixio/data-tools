@@ -4,12 +4,13 @@ import streamlit as st
 import pandas as pd
 
 from dashboards.utils.data import export_data
-from dashboards.utils.charts import chart_bars, chart_lines
+from dashboards.utils.charts import chart_bars, chart_lines, chart_area
 
 
 @st.cache_data(ttl="30m")
 def fetch_data(chain, start_date, end_date, resolution):
     api = st.session_state.api
+    print(f"Fetching data for {chain} from {start_date} to {end_date}")
 
     df_stats = api._run_query(
         f"""
@@ -26,6 +27,7 @@ def fetch_data(chain, start_date, end_date, resolution):
         WHERE ts >= '{start_date}' and ts <= '{end_date}'
         """
     )
+    print(f"fetched {df_stats.shape[0]} rows")
 
     df_oi = api._run_query(
         f"""
@@ -37,6 +39,7 @@ def fetch_data(chain, start_date, end_date, resolution):
         ORDER BY ts
         """
     )
+    print(f"fetched {df_oi.shape[0]} rows")
 
     df_buyback = (
         api._run_query(
@@ -54,6 +57,7 @@ def fetch_data(chain, start_date, end_date, resolution):
         if st.session_state.chain.startswith("base")
         else pd.DataFrame()
     )
+    print(f"fetched {df_buyback.shape[0]} rows")
 
     df_collateral = (
         api._run_query(
@@ -70,12 +74,30 @@ def fetch_data(chain, start_date, end_date, resolution):
         if st.session_state.chain.startswith("arbitrum")
         else pd.DataFrame()
     )
+    print(f"fetched {df_collateral.shape[0]} rows")
+
+    df_account_activity = api._run_query(
+        f"""
+        SELECT
+            ts,
+            new_accounts_daily,
+            dau - new_accounts_daily as returning_accounts_daily,
+            new_accounts_monthly,
+            mau - new_accounts_monthly as returning_accounts_monthly,
+            dau,
+            mau
+        FROM {api.environment}_{chain}.fct_perp_account_activity_{chain}
+        WHERE DATE(ts) >= '{start_date}' and DATE(ts) <= '{end_date}'
+        """
+    )
+    print(f"fetched {df_account_activity.shape[0]} rows")
 
     return {
         "stats": df_stats,
         "oi": df_oi,
         "buyback": df_buyback,
         "collateral": df_collateral,
+        "account_activity": df_account_activity,
     }
 
 
@@ -145,7 +167,7 @@ def make_charts(data):
                 color_by="synth_symbol",
                 title="Collateral Balances",
             )
-            if st.session_state.chain.startswith("arbitrum")
+            if not data["collateral"].empty
             else None
         ),
         "buyback": (
@@ -170,6 +192,24 @@ def make_charts(data):
             )
             if st.session_state.chain.startswith("base")
             else None
+        ),
+        "account_activity_daily": chart_bars(
+            data["account_activity"],
+            x_col="ts",
+            y_cols=["new_accounts_daily", "returning_accounts_daily"],
+            title="Daily New/Returning Accounts",
+            y_format="#",
+            help_text="Number of daily new/returning accounts that have at least one order settled",
+            custom_agg=dict(field="dau", name="Total", agg="sum"),
+        ),
+        "account_activity_monthly": chart_area(
+            data["account_activity"],
+            x_col="ts",
+            y_cols=["new_accounts_monthly", "returning_accounts_monthly"],
+            title="Monthly New/Returning Accounts",
+            y_format="#",
+            help_text="Number of new/returning accounts that have at least one order settled in the last 28 days",
+            custom_agg=dict(field="mau", name="Total", agg="sum"),
         ),
     }
 
@@ -234,14 +274,15 @@ def main():
         st.plotly_chart(charts["oi"], use_container_width=True)
         st.plotly_chart(charts["account_liquidations"], use_container_width=True)
         st.plotly_chart(charts["cumulative_volume"], use_container_width=True)
-
+        st.plotly_chart(charts["account_activity_daily"], use_container_width=True)
     with col2:
         st.plotly_chart(charts["fees"], use_container_width=True)
         st.plotly_chart(charts["trades"], use_container_width=True)
         st.plotly_chart(charts["liquidation_rewards"], use_container_width=True)
         st.plotly_chart(charts["cumulative_fees"], use_container_width=True)
+        st.plotly_chart(charts["account_activity_monthly"], use_container_width=True)
 
-    if st.session_state.chain.startswith("arbitrum"):
+    if charts["collateral"] is not None:
         st.plotly_chart(charts["collateral"], use_container_width=True)
 
     if st.session_state.chain.startswith("base"):
