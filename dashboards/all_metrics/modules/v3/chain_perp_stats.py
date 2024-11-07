@@ -10,6 +10,7 @@ from dashboards.utils.charts import chart_bars, chart_lines, chart_area
 @st.cache_data(ttl="30m")
 def fetch_data(chain, start_date, end_date, resolution):
     api = st.session_state.api
+    print(f"Fetching data for {chain} from {start_date} to {end_date}")
 
     df_stats = api._run_query(
         f"""
@@ -26,6 +27,7 @@ def fetch_data(chain, start_date, end_date, resolution):
         WHERE ts >= '{start_date}' and ts <= '{end_date}'
         """
     )
+    print(f"fetched {df_stats.shape[0]} rows")
 
     df_oi = api._run_query(
         f"""
@@ -37,6 +39,7 @@ def fetch_data(chain, start_date, end_date, resolution):
         ORDER BY ts
         """
     )
+    print(f"fetched {df_oi.shape[0]} rows")
 
     df_buyback = (
         api._run_query(
@@ -54,6 +57,24 @@ def fetch_data(chain, start_date, end_date, resolution):
         if st.session_state.chain.startswith("base")
         else pd.DataFrame()
     )
+    print(f"fetched {df_buyback.shape[0]} rows")
+
+    df_collateral = (
+        api._run_query(
+            f"""
+        SELECT
+            ts,
+            synth_symbol,
+            total_balance,
+            total_balance_usd
+        FROM {api.environment}_{chain}.fct_perp_collateral_balances_{chain}
+        WHERE ts >= '{start_date}' and ts <= '{end_date}'
+        """
+        )
+        if st.session_state.chain.startswith("arbitrum")
+        else pd.DataFrame()
+    )
+    print(f"fetched {df_collateral.shape[0]} rows")
 
     df_account_activity = api._run_query(
         f"""
@@ -69,11 +90,13 @@ def fetch_data(chain, start_date, end_date, resolution):
         WHERE DATE(ts) >= '{start_date}' and DATE(ts) <= '{end_date}'
         """
     )
+    print(f"fetched {df_account_activity.shape[0]} rows")
 
     return {
         "stats": df_stats,
         "oi": df_oi,
         "buyback": df_buyback,
+        "collateral": df_collateral,
         "account_activity": df_account_activity,
     }
 
@@ -134,6 +157,18 @@ def make_charts(data):
             x_col="ts",
             y_cols="liquidation_rewards",
             title="Liquidation Rewards",
+        ),
+        "collateral": (
+            chart_lines(
+                data["collateral"],
+                x_col="ts",
+                y_cols="total_balance_usd",
+                y_format="$",
+                color_by="synth_symbol",
+                title="Collateral Balances",
+            )
+            if not data["collateral"].empty
+            else None
         ),
         "buyback": (
             chart_bars(
@@ -246,6 +281,10 @@ def main():
         st.plotly_chart(charts["liquidation_rewards"], use_container_width=True)
         st.plotly_chart(charts["cumulative_fees"], use_container_width=True)
         st.plotly_chart(charts["account_activity_monthly"], use_container_width=True)
+
+    if charts["collateral"] is not None:
+        st.plotly_chart(charts["collateral"], use_container_width=True)
+
     if st.session_state.chain.startswith("base"):
         bb_col1, bb_col2 = st.columns(2)
         with bb_col1:
