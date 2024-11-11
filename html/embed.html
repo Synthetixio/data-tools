@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Synthetix Stats</title>
+    <style type="text/css">
+        html {
+            overflow: auto;
+        }
+
+        html,
+        body,
+        div,
+        iframe {
+            margin: 0px;
+            padding: 0px;
+            height: 100%;
+            border: none;
+        }
+
+        iframe {
+            display: block;
+            width: 100%;
+            border: none;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+    </style>
+    <link rel="icon" type="image/png" href="./dashboards/static/favicon.ico">
+</head>
+
+<body>
+    <iframe id="embeddedFrame" frameborder="0" marginheight="0" marginwidth="0" width="100%" height="100%"
+        scrolling="auto">
+    </iframe>
+
+    <script>
+        function initializeRoute() {
+            // Get the stored path and query from 404.html redirect or current URL
+            let path = sessionStorage.getItem('path') || window.location.pathname;
+            let query = sessionStorage.getItem('query') || window.location.search;
+
+            // Clear the stored values
+            sessionStorage.removeItem('path');
+            sessionStorage.removeItem('query');
+
+            // Remove /index.html from path if present
+            path = path.replace('/index.html', '');
+
+            // Get existing query parameters
+            const params = new URLSearchParams(query);
+            params.set('embedded', 'true');
+
+            // Determine which app to use based on path
+            let baseUrl = 'https://synthetix.streamlit.app';
+            let remainingPath = path;
+
+            if (path.startsWith('/all')) {
+                baseUrl = 'https://synthetix-all.streamlit.app';
+                // Remove /all from the path but keep any subsequent path components
+                remainingPath = path.replace('/all', '') || '/';
+            }
+
+            // Construct the final URL
+            const finalUrl = `${baseUrl}${remainingPath}?${params.toString()}`;
+
+            // Set iframe source
+            document.getElementById('embeddedFrame').src = finalUrl;
+
+            // Update browser URL without triggering reload
+            try {
+                window.history.replaceState({}, '', `${path}${query}`);
+            } catch (e) {
+                console.warn('Could not update URL:', e);
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', initializeRoute);
+    </script>
+</body>
+
+</html>
