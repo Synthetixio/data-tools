@@ -36,10 +36,12 @@
     </div>
 
     <script>
+        const BASE_PATH = '/data-tools'; // Change this if your repo name is different
+
         function initializeEmbed() {
             // Get stored path from 404 redirect or current URL
             const storedPath = sessionStorage.getItem('redirectPath');
-            let fullPath = storedPath || window.location.pathname + window.location.search + window.location.hash;
+            let fullPath = storedPath || window.location.pathname.replace(BASE_PATH, '') + window.location.search + window.location.hash;
 
             // Clear stored path
             sessionStorage.removeItem('redirectPath');
@@ -72,7 +74,8 @@
 
             // Update browser URL without reload
             try {
-                window.history.replaceState({}, '', fullPath);
+                const displayPath = BASE_PATH + fullPath;
+                window.history.replaceState({}, '', displayPath);
             } catch (e) {
                 console.warn('Could not update URL:', e);
             }
