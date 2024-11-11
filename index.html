@@ -36,22 +36,39 @@
     </div>
 
     <script>
-        const BASE_PATH = '/data-tools'; // Change this if your repo name is different
+        const BASE_PATH = '/data-tools';
 
         function initializeEmbed() {
             // Get stored path from 404 redirect or current URL
             const storedPath = sessionStorage.getItem('redirectPath');
-            let fullPath = storedPath || window.location.pathname.replace(BASE_PATH, '') + window.location.search + window.location.hash;
+            let pathAfterBase;
+
+            if (storedPath) {
+                pathAfterBase = storedPath;
+            } else {
+                pathAfterBase = window.location.pathname;
+                if (pathAfterBase.startsWith(BASE_PATH)) {
+                    pathAfterBase = pathAfterBase.substring(BASE_PATH.length);
+                }
+            }
+
+            // Ensure path starts with '/' if empty
+            if (!pathAfterBase || pathAfterBase === '') {
+                pathAfterBase = '/';
+            }
+
+            // Reconstruct the full path including search and hash
+            const fullPath = pathAfterBase + window.location.search + window.location.hash;
 
             // Clear stored path
             sessionStorage.removeItem('redirectPath');
 
-            // Remove /index.html if present
-            fullPath = fullPath.replace('/index.html', '');
+            // Remove '/index.html' if present
+            let cleanedPath = fullPath.replace('/index.html', '');
 
             // Parse the URL parts
-            const [pathname, search] = fullPath.split('?');
-            const params = new URLSearchParams(search);
+            const [pathname, search] = cleanedPath.split('?');
+            const params = new URLSearchParams(search || '');
 
             // Always ensure embedded=true
             params.set('embedded', 'true');
@@ -62,8 +79,11 @@
 
             if (pathname.startsWith('/all')) {
                 baseUrl = 'https://synthetix-all.streamlit.app';
-                // Remove /all prefix but keep any subsequent path
-                appPath = pathname.replace('/all', '') || '/';
+                // Remove '/all' prefix
+                appPath = pathname.substring(4); // Remove '/all'
+                if (appPath === '') {
+                    appPath = '/';
+                }
             }
 
             // Construct final URL
@@ -74,7 +94,7 @@
 
             // Update browser URL without reload
             try {
-                const displayPath = BASE_PATH + fullPath;
+                const displayPath = BASE_PATH + cleanedPath;
                 window.history.replaceState({}, '', displayPath);
             } catch (e) {
                 console.warn('Could not update URL:', e);

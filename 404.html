@@ -1,16 +1,4 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <meta charset="utf-8">
-    <script>
-        var segmentCount = 1; // Change this to 0 if serving from root
-        var location = window.location;
-        var rootPath = '/data-tools'; // Change this if your repo name is different
-        var l = location.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/';
-        sessionStorage.setItem('redirectPath', location.pathname.slice(l.length) + location.search + location.hash);
-        window.location.href = rootPath + '/index.html';
-    </script>
-</head>
-
-</html>
+<script type="text/javascript">
+    sessionStorage.setItem('redirectPath', window.location.pathname + window.location.search + window.location.hash);
+    window.location.replace('/data-tools/');
+</script>
