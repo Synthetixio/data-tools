@@ -1,4 +1,20 @@
-<script type="text/javascript">
-    sessionStorage.setItem('redirectPath', window.location.pathname + window.location.search + window.location.hash);
-    window.location.replace('/data-tools/');
-</script>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found</title>
+    <script>
+        // Store the original path so that the main page can access it
+        sessionStorage.setItem('redirectPath', window.location.pathname);
+        // Redirect to the root or index page
+        window.location.href = "/data-tools";
+    </script>
+</head>
+
+<body>
+    <h1>Redirecting...</h1>
+</body>
+
+</html>

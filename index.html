@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Synthetix Stats</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         * {
             margin: 0;
@@ -34,65 +35,41 @@
     <div id="embed-container">
         <iframe id="statsFrame"></iframe>
     </div>
-
     <script>
-        const BASE_PATH = '/data-tools';
+        const BASE_PATH = '/data-tools';  // Update this if necessary to match your GitHub Pages setup
 
         function initializeEmbed() {
-            // Get stored path from 404 redirect or current URL
             const storedPath = sessionStorage.getItem('redirectPath');
-            let pathAfterBase;
+            let pathAfterBase = storedPath ? storedPath : window.location.pathname;
 
-            if (storedPath) {
-                pathAfterBase = storedPath;
-            } else {
-                pathAfterBase = window.location.pathname;
-                if (pathAfterBase.startsWith(BASE_PATH)) {
-                    pathAfterBase = pathAfterBase.substring(BASE_PATH.length);
-                }
+            if (pathAfterBase.startsWith(BASE_PATH)) {
+                pathAfterBase = pathAfterBase.substring(BASE_PATH.length);
             }
 
-            // Ensure path starts with '/' if empty
             if (!pathAfterBase || pathAfterBase === '') {
                 pathAfterBase = '/';
             }
 
-            // Reconstruct the full path including search and hash
             const fullPath = pathAfterBase + window.location.search + window.location.hash;
-
-            // Clear stored path
             sessionStorage.removeItem('redirectPath');
 
-            // Remove '/index.html' if present
             let cleanedPath = fullPath.replace('/index.html', '');
-
-            // Parse the URL parts
             const [pathname, search] = cleanedPath.split('?');
             const params = new URLSearchParams(search || '');
-
-            // Always ensure embedded=true
             params.set('embedded', 'true');
 
-            // Determine which app to use
             let baseUrl = 'https://synthetix.streamlit.app';
             let appPath = pathname;
 
             if (pathname.startsWith('/all')) {
                 baseUrl = 'https://synthetix-all.streamlit.app';
-                // Remove '/all' prefix
-                appPath = pathname.substring(4); // Remove '/all'
-                if (appPath === '') {
-                    appPath = '/';
-                }
+                appPath = pathname.substring(4);
+                if (appPath === '') appPath = '/';
             }
 
-            // Construct final URL
             const finalUrl = `${baseUrl}${appPath}?${params.toString()}`;
-
-            // Set iframe src
             document.getElementById('statsFrame').src = finalUrl;
 
-            // Update browser URL without reload
             try {
                 const displayPath = BASE_PATH + cleanedPath;
                 window.history.replaceState({}, '', displayPath);
@@ -101,10 +78,7 @@
             }
         }
 
-        // Handle initial load
         window.addEventListener('load', initializeEmbed);
-
-        // Handle browser navigation
         window.addEventListener('popstate', initializeEmbed);
     </script>
 </body>
