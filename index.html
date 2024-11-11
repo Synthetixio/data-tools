@@ -30,7 +30,34 @@
 </head>
 
 <body>
-    <iframe src="https://synthetix.streamlit.app/?embedded=true" frameborder="0" marginheight="0" marginwidth="0"
-        width="100%" height="100%" scrolling="auto">
+    <iframe id="embeddedFrame" frameborder="0" marginheight="0" marginwidth="0" width="100%" height="100%"
+        scrolling="auto">
     </iframe>
+
+    <script type="text/javascript">
+        // Extract query parameters from the current URL
+        var queryString = window.location.search;
+        var params = new URLSearchParams(queryString);
+
+        // Ensure 'embedded=true' is included
+        params.set('embedded', 'true');
+
+        // Get the current path
+        var path = window.location.pathname;
+
+        // Determine the appropriate iframe source based on the path
+        var iframeSrc;
+        if (path === '/all') {
+            // For '/all', embed the 'all' Streamlit app
+            iframeSrc = 'https://synthetix-all.streamlit.app/?' + params.toString();
+        } else {
+            // For all other paths, embed the default Streamlit app
+            iframeSrc = 'https://synthetix.streamlit.app/?' + params.toString();
+        }
+
+        // Set the iframe's source
+        document.getElementById('embeddedFrame').src = iframeSrc;
+    </script>
 </body>
+
+</html>

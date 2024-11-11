@@ -6,9 +6,15 @@ from streamlit_card import card
 
 
 def sidebar_logo():
-    LOGO_URL = "dashboards/static/logo.png"
+    LOGO_URL = "dashboards/static/logo.svg"
     HEIGHT = 28
-    logo = f"url(data:image/png;base64,{base64.b64encode(Path(LOGO_URL).read_bytes()).decode()})"
+
+    # Read SVG and convert to base64
+    svg = Path(LOGO_URL).read_text()
+    b64 = base64.b64encode(svg.encode("utf-8")).decode("utf-8")
+
+    # Create the URL format for background-image
+    logo = f"url(data:image/svg+xml;base64,{b64})"
 
     st.html(
         f"""
@@ -18,6 +24,7 @@ def sidebar_logo():
                 background-repeat: no-repeat;
                 padding-top: {HEIGHT - 10}px;
                 background-position: 20px 20px;
+                background-size: auto {HEIGHT}px;
             }}
         </style>
         """,
