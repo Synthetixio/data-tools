@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Synthetix Stats</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #embed-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="embed-container">
+        <iframe id="statsFrame"></iframe>
+    </div>
+
+    <script>
+        function initializeEmbed() {
+            // Get stored path from 404 redirect or current URL
+            const storedPath = sessionStorage.getItem('redirectPath');
+            let fullPath = storedPath || window.location.pathname + window.location.search + window.location.hash;
+
+            // Clear stored path
+            sessionStorage.removeItem('redirectPath');
+
+            // Remove /index.html if present
+            fullPath = fullPath.replace('/index.html', '');
+
+            // Parse the URL parts
+            const [pathname, search] = fullPath.split('?');
+            const params = new URLSearchParams(search);
+
+            // Always ensure embedded=true
+            params.set('embedded', 'true');
+
+            // Determine which app to use
+            let baseUrl = 'https://synthetix.streamlit.app';
+            let appPath = pathname;
+
+            if (pathname.startsWith('/all')) {
+                baseUrl = 'https://synthetix-all.streamlit.app';
+                // Remove /all prefix but keep any subsequent path
+                appPath = pathname.replace('/all', '') || '/';
+            }
+
+            // Construct final URL
+            const finalUrl = `${baseUrl}${appPath}?${params.toString()}`;
+
+            // Set iframe src
+            document.getElementById('statsFrame').src = finalUrl;
+
+            // Update browser URL without reload
+            try {
+                window.history.replaceState({}, '', fullPath);
+            } catch (e) {
+                console.warn('Could not update URL:', e);
+            }
+        }
+
+        // Handle initial load
+        window.addEventListener('load', initializeEmbed);
+
+        // Handle browser navigation
+        window.addEventListener('popstate', initializeEmbed);
+    </script>
+</body>
+
+</html>
