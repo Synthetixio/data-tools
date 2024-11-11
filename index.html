@@ -36,25 +36,26 @@
         <iframe id="statsFrame"></iframe>
     </div>
     <script>
-        const BASE_PATH = '/data-tools';  // Update this if necessary to match your GitHub Pages setup
+        const BASE_PATH = '/data-tools';
 
         function initializeEmbed() {
+            // Check for redirect path in session storage
             const storedPath = sessionStorage.getItem('redirectPath');
-            let pathAfterBase = storedPath ? storedPath : window.location.pathname;
+            let pathAfterBase = storedPath ? storedPath : window.location.pathname + window.location.search + window.location.hash;
+
+            // Clear the stored path once retrieved
+            sessionStorage.removeItem('redirectPath');
 
             if (pathAfterBase.startsWith(BASE_PATH)) {
                 pathAfterBase = pathAfterBase.substring(BASE_PATH.length);
             }
 
+            // If pathAfterBase is empty, set to "/"
             if (!pathAfterBase || pathAfterBase === '') {
                 pathAfterBase = '/';
             }
 
-            const fullPath = pathAfterBase + window.location.search + window.location.hash;
-            sessionStorage.removeItem('redirectPath');
-
-            let cleanedPath = fullPath.replace('/index.html', '');
-            const [pathname, search] = cleanedPath.split('?');
+            const [pathname, search] = pathAfterBase.split('?');
             const params = new URLSearchParams(search || '');
             params.set('embedded', 'true');
 
@@ -70,8 +71,9 @@
             const finalUrl = `${baseUrl}${appPath}?${params.toString()}`;
             document.getElementById('statsFrame').src = finalUrl;
 
+            // Attempt to update the displayed URL without reloading the page
             try {
-                const displayPath = BASE_PATH + cleanedPath;
+                const displayPath = BASE_PATH + pathAfterBase;
                 window.history.replaceState({}, '', displayPath);
             } catch (e) {
                 console.warn('Could not update URL:', e);
