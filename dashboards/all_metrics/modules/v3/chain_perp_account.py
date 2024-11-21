@@ -4,7 +4,7 @@ import streamlit as st
 import pandas as pd
 
 from dashboards.utils.data import export_data
-from dashboards.utils.charts import chart_bars, chart_lines
+from dashboards.utils.charts import chart_lines
 
 
 @st.cache_data(ttl="30m")
@@ -26,7 +26,9 @@ def fetch_data(chain, account_id, start_date, end_date):
     # Query for accounts
     df_accounts = api._run_query(
         f"""
-        SELECT DISTINCT account_id, sender FROM {api.environment}_{chain}.fct_perp_orders_{chain}
+        SELECT DISTINCT account_id, sender as owner FROM {api.environment}_{chain}.fct_perp_orders_{chain}
+        UNION ALL
+        SELECT DISTINCT CAST(account_id as TEXT) as account_id, owner from {api.environment}_raw_{chain}.perp_account_created_{chain}
         """
     )
 
@@ -146,8 +148,7 @@ def fetch_data(chain, account_id, start_date, end_date):
     )
 
     # Adjust data
-    df_accounts = df_accounts[["account_id", "sender"]].drop_duplicates()
-    df_accounts.columns = ["id", "owner"]
+    df_accounts = df_accounts[["account_id", "owner"]].drop_duplicates()
 
     return {
         "accounts": df_accounts,
@@ -238,13 +239,15 @@ def main():
         address = st.text_input("Enter an address to look up associated accounts")
 
         df_accounts = data["accounts"]
-        account_numbers = df_accounts[df_accounts["owner"] == address]["id"].unique()
+        account_numbers = df_accounts[
+            df_accounts["owner"].str.lower() == address.lower()
+        ]["account_id"].unique()
 
         if len(account_numbers) > 0:
             st.dataframe(account_numbers, hide_index=True)
 
     # Account selection
-    accounts = data["accounts"]["id"].unique()
+    accounts = data["accounts"]["account_id"].unique()
     accounts = sorted([int(acc) for acc in accounts])
     st.selectbox(
         "Select account",
