@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synthetix Stats</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+    <iframe id="stats"></iframe>
+    <script>
+        const url = new URL(window.location.href);
+        const params = new URLSearchParams(url.search);
+        params.set('embedded', 'true');
+        const page = params.get('page') || '';
+        document.getElementById('stats').src = `https://synthetix.streamlit.app/${page}?${params.toString()}${url.hash}`;
+    </script>
+</body>
+
+</html>
