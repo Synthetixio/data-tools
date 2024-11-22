@@ -1,0 +1,1 @@
+stats.synthetix.io
