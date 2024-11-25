@@ -8,21 +8,21 @@ from dashboards.all_metrics.modules.v2 import (
 
 st.session_state.chain = "optimism_mainnet"
 
-pages = {
+modules = {
     "Perps V2": perp_stats.main,
     "Perps V2 Monitor": perp_monitor.main,
     "Perps V2 Markets": perp_markets.main,
     "Perps V2 Integrators": perp_integrators.main,
 }
 
-page_query = st.query_params["page"] if "page" in st.query_params else None
-state_page = st.sidebar.radio(
-    "Optimism",
-    tuple(pages.keys()),
+module_query = st.query_params["module"] if "module" in st.query_params else None
+state_module = st.sidebar.radio(
+    "All Chains",
+    tuple(modules.keys()),
     index=(
-        tuple(pages.keys()).index(page_query)
-        if page_query and page_query in pages.keys()
+        tuple(modules.keys()).index(module_query)
+        if module_query and module_query in modules.keys()
         else 0
     ),
 )
-pages[state_page]()
+modules[state_module]()

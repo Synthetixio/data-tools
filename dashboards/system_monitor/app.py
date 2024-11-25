@@ -1,4 +1,3 @@
-import os
 from dotenv import load_dotenv
 import streamlit as st
 from api.internal_api import SynthetixAPI, get_db_config
@@ -11,7 +10,7 @@ if "network_id" not in st.session_state:
 
 st.set_page_config(
     page_title="Synthetix System Monitor",
-    page_icon=f"dashboards/static/favicon.ico",
+    page_icon="dashboards/static/favicon.ico",
     layout="wide",
 )
 
