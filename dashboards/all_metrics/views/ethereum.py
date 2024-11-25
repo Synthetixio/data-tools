@@ -5,18 +5,18 @@ from dashboards.all_metrics.modules.v3 import (
 
 st.session_state.chain = "eth_mainnet"
 
-pages = {
+modules = {
     "LP": chain_core_stats.main,
 }
 
-page_query = st.query_params["page"] if "page" in st.query_params else None
-state_page = st.sidebar.radio(
-    "Ethereum",
-    tuple(pages.keys()),
+module_query = st.query_params["module"] if "module" in st.query_params else None
+state_module = st.sidebar.radio(
+    "All Chains",
+    tuple(modules.keys()),
     index=(
-        tuple(pages.keys()).index(page_query)
-        if page_query and page_query in pages.keys()
+        tuple(modules.keys()).index(module_query)
+        if module_query and module_query in modules.keys()
         else 0
     ),
 )
-pages[state_page]()
+modules[state_module]()
