@@ -71,7 +71,7 @@ def fetch_data(chain, start_date, end_date, resolution):
         WHERE ts >= '{start_date}' and ts <= '{end_date}'
         """
         )
-        if st.session_state.chain.startswith("arbitrum")
+        if "base" in st.session_state.chain or "arbitrum" in st.session_state.chain
         else pd.DataFrame()
     )
     print(f"fetched {df_collateral.shape[0]} rows")
@@ -103,6 +103,10 @@ def fetch_data(chain, start_date, end_date, resolution):
 
 @st.cache_data(ttl="30m")
 def make_charts(data):
+    has_usd_balances = (
+        not data["collateral"].empty
+        and data["collateral"]["total_balance_usd"].sum() > 0
+    )
     return {
         "volume": chart_bars(
             data["stats"],
@@ -162,8 +166,8 @@ def make_charts(data):
             chart_lines(
                 data["collateral"],
                 x_col="ts",
-                y_cols="total_balance_usd",
-                y_format="$",
+                y_cols="total_balance_usd" if has_usd_balances else "total_balance",
+                y_format="$" if has_usd_balances else "#",
                 color_by="synth_symbol",
                 title="Collateral Balances",
             )
@@ -215,7 +219,7 @@ def make_charts(data):
 
 
 def main():
-    st.markdown(f"## Perps")
+    st.markdown("## Perps")
 
     # Initialize session state for filters if not already set
     if "resolution" not in st.session_state:
