@@ -71,6 +71,7 @@ def make_charts(data):
             title="Accounts",
             color_by="tracking_code",
             y_format="#",
+            no_decimals=True,
         ),
         "volume": chart_bars(
             df=data["stats"],
@@ -94,6 +95,7 @@ def make_charts(data):
             title="Trades",
             color_by="tracking_code",
             y_format="#",
+            no_decimals=True,
         ),
         "trades_pct": chart_bars(
             df=data["stats"],

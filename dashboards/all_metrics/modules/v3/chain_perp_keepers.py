@@ -68,6 +68,7 @@ def make_charts(data):
             color_by="keeper",
             y_format="#",
             unified_hover=False,
+            no_decimals=True,
         ),
         "trades_pct": chart_bars(
             df,

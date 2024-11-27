@@ -138,6 +138,8 @@ def make_charts(data):
             "Cumulative Trades",
             "tracking_code",
             unified_hover=False,
+            y_format="#",
+            no_decimals=True,
         ),
     }
 

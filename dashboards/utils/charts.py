@@ -46,21 +46,29 @@ def chart_bars(
     sort_by_last_value: bool = True,
     sort_ascending: bool = False,
     unified_hover: bool = True,
+    no_decimals: bool = False,
 ):
     """Create a bar chart."""
     if isinstance(y_cols, str):
         traces = _create_traces_from_string(
-            df,
-            x_col,
-            y_cols,
-            "bar",
-            color_by,
-            human_format,
-            y_format,
+            df=df,
+            x_col=x_col,
+            y_cols=y_cols,
+            trace_type="bar",
+            color_by=color_by,
+            human_format=human_format,
+            y_format=y_format,
+            no_decimals=no_decimals,
         )
     else:
         traces = _create_traces_from_list(
-            df, x_col, y_cols, "bar", human_format, y_format
+            df=df,
+            x_col=x_col,
+            y_cols=y_cols,
+            trace_type="bar",
+            human_format=human_format,
+            y_format=y_format,
+            no_decimals=no_decimals,
         )
     if sort_by_last_value:
         traces = sort_traces(traces, sort_ascending)
@@ -128,6 +136,7 @@ def chart_area(
     human_format: bool = True,
     custom_agg: Optional[Dict[str, str]] = None,
     unified_hover: bool = True,
+    no_decimals: bool = False,
 ):
     """Create an area chart."""
     if isinstance(y_cols, str):
@@ -140,6 +149,7 @@ def chart_area(
             human_format=human_format,
             y_format=y_format,
             stackgroup="one",
+            no_decimals=no_decimals,
         )
     else:
         traces = _create_traces_from_list(
@@ -150,6 +160,7 @@ def chart_area(
             human_format=human_format,
             y_format=y_format,
             stackgroup="one",
+            no_decimals=no_decimals,
         )
     if sort_by_last_value:
         traces = sort_traces(traces, sort_ascending)
@@ -187,28 +198,31 @@ def chart_lines(
     human_format: bool = True,
     custom_agg: Optional[Dict[str, str]] = None,
     unified_hover: bool = True,
+    no_decimals: bool = False,
 ):
     """Create a line chart."""
     if isinstance(y_cols, str):
         traces = _create_traces_from_string(
-            df,
-            x_col,
-            y_cols,
+            df=df,
+            x_col=x_col,
+            y_cols=y_cols,
             trace_type="line",
             color_by=color_by,
             human_format=human_format,
             y_format=y_format,
             stackgroup="",
+            no_decimals=no_decimals,
         )
     else:
         traces = _create_traces_from_list(
-            df,
-            x_col,
-            y_cols,
+            df=df,
+            x_col=x_col,
+            y_cols=y_cols,
             trace_type="line",
             human_format=human_format,
             y_format=y_format,
             stackgroup="",
+            no_decimals=no_decimals,
         )
     if sort_by_last_value:
         traces = sort_traces(traces, sort_ascending)
@@ -367,10 +381,10 @@ def _create_traces_from_list(
     y_format: str = "$",
     stackgroup: Optional[str] = "one",
     color_map: Optional[Dict[str, str]] = CATEGORICAL_COLORS,
+    no_decimals: bool = False,
 ):
     traces = []
     percentage = True if y_format == "%" else False
-    no_decimals = False if y_format == "$" else True
     for i, y_col in enumerate(y_cols):
         color = color_map[i % len(color_map)]
         hover_template = f"<extra></extra>%{{fullData.name}}: {HOVER_PREFIX_MAP[y_format]}%{{customdata}}"
@@ -403,10 +417,10 @@ def _create_traces_from_string(
     y_format: str = "$",
     stackgroup: Optional[str] = "one",
     color_map: Optional[Dict[str, str]] = CATEGORICAL_COLORS,
+    no_decimals: bool = False,
 ):
     traces = []
     percentage = True if y_format == "%" else False
-    no_decimals = False if y_format == "$" else True
     if color_by is not None:
         if trace_type == "area":
             # Get all unique indexes

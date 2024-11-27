@@ -71,7 +71,7 @@ def fetch_data(chain, start_date, end_date, resolution):
         WHERE ts >= '{start_date}' and ts <= '{end_date}'
         """
         )
-        if st.session_state.chain.startswith("arbitrum")
+        if "base" in st.session_state.chain or "arbitrum" in st.session_state.chain
         else pd.DataFrame()
     )
     print(f"fetched {df_collateral.shape[0]} rows")
@@ -103,6 +103,10 @@ def fetch_data(chain, start_date, end_date, resolution):
 
 @st.cache_data(ttl="30m")
 def make_charts(data):
+    has_usd_balances = (
+        not data["collateral"].empty
+        and data["collateral"]["total_balance_usd"].sum() > 0
+    )
     return {
         "volume": chart_bars(
             data["stats"],
@@ -136,6 +140,7 @@ def make_charts(data):
             y_cols="trades",
             title="Trades",
             y_format="#",
+            no_decimals=True,
         ),
         "oi": chart_lines(
             data["oi"],
@@ -151,6 +156,7 @@ def make_charts(data):
             y_cols="liquidated_accounts",
             title="Account Liquidations",
             y_format="#",
+            no_decimals=True,
         ),
         "liquidation_rewards": chart_bars(
             data["stats"],
@@ -162,8 +168,8 @@ def make_charts(data):
             chart_lines(
                 data["collateral"],
                 x_col="ts",
-                y_cols="total_balance_usd",
-                y_format="$",
+                y_cols="total_balance_usd" if has_usd_balances else "total_balance",
+                y_format="$" if has_usd_balances else "#",
                 color_by="synth_symbol",
                 title="Collateral Balances",
             )
@@ -201,6 +207,7 @@ def make_charts(data):
             y_format="#",
             help_text="Number of daily new/returning accounts that have at least one order settled",
             custom_agg=dict(field="dau", name="Total", agg="sum"),
+            no_decimals=True,
         ),
         "account_activity_monthly": chart_area(
             data["account_activity"],
@@ -210,12 +217,13 @@ def make_charts(data):
             y_format="#",
             help_text="Number of new/returning accounts that have at least one order settled in the last 28 days",
             custom_agg=dict(field="mau", name="Total", agg="sum"),
+            no_decimals=True,
         ),
     }
 
 
 def main():
-    st.markdown(f"## Perps")
+    st.markdown("## Perps")
 
     # Initialize session state for filters if not already set
     if "resolution" not in st.session_state:

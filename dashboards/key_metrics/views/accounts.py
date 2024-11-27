@@ -125,6 +125,7 @@ chart_core_account_activity_daily = chart_lines(
     color="action",
     y_format="#",
     help_text="Number of daily active accounts per action (Delegate, Withdraw, Claim)",
+    no_decimals=True,
 )
 chart_core_account_activity_monthly = chart_bars(
     data["core_account_activity_monthly"],
@@ -135,6 +136,7 @@ chart_core_account_activity_monthly = chart_bars(
     y_format="#",
     barmode="group",
     help_text="Number of monthly active accounts per action (Delegate, Withdraw, Claim)",
+    no_decimals=True,
 )
 chart_core_nof_stakers = chart_bars(
     data["core_nof_stakers"],
@@ -144,6 +146,7 @@ chart_core_nof_stakers = chart_bars(
     color="chain",
     y_format="#",
     help_text="Number of unique accounts that have at least one staked position",
+    no_decimals=True,
 )
 
 
@@ -165,6 +168,7 @@ if st.session_state.chain in [*SUPPORTED_CHAINS_PERPS, "all"]:
         color="chain",
         y_format="#",
         help_text="Number of daily unique accounts that have at least one settled order",
+        no_decimals=True,
     )
     chart_perps_account_activity_monthly = chart_area(
         data["perps_account_activity"],
@@ -174,6 +178,7 @@ if st.session_state.chain in [*SUPPORTED_CHAINS_PERPS, "all"]:
         color="chain",
         y_format="#",
         help_text="Number of monthly unique accounts that have at least one settled order",
+        no_decimals=True,
     )
 
     perps_chart_col1, perps_chart_col2 = st.columns(2)
