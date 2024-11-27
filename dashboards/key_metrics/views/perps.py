@@ -108,6 +108,7 @@ chart_perps_account_activity_daily = chart_bars(
         if st.session_state.chain == "all"
         else None
     ),
+    no_decimals=True,
 )
 chart_perps_account_activity_monthly = chart_area(
     data["perps_account_activity"],
@@ -122,6 +123,7 @@ chart_perps_account_activity_monthly = chart_area(
         if st.session_state.chain == "all"
         else None
     ),
+    no_decimals=True,
 )
 
 chart_col1, chart_col2 = st.columns(2)

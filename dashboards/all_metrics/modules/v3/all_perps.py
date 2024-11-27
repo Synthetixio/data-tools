@@ -83,6 +83,7 @@ def make_charts(data):
             title="Trades",
             color_by="label",
             y_format="#",
+            no_decimals=True,
         ),
         "liquidations": chart_bars(
             data["stats"],
@@ -91,6 +92,7 @@ def make_charts(data):
             title="Liquidations",
             color_by="label",
             y_format="#",
+            no_decimals=True,
         ),
     }
 

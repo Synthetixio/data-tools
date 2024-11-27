@@ -5,7 +5,7 @@ def human_format(num, no_decimals=False, percentage=False):
     # Check if the number is zero
     if num == 0:
         return "0"
-    if no_decimals:
+    if num < 100 and no_decimals:
         return f"{num:.0f}"
 
     # Define the magnitude labels for numbers greater than or equal to 1

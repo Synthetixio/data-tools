@@ -165,6 +165,7 @@ def make_charts(data):
             "market_symbol",
             unified_hover=False,
             y_format="#",
+            no_decimals=True,
         ),
         "position_liquidations": chart_bars(
             data["market"],
@@ -174,6 +175,7 @@ def make_charts(data):
             "market_symbol",
             y_format="#",
             unified_hover=False,
+            no_decimals=True,
         ),
         "account_liquidations": chart_bars(
             data["stats"],
@@ -181,6 +183,7 @@ def make_charts(data):
             y_cols="liquidated_accounts",
             title="Account Liquidations",
             y_format="#",
+            no_decimals=True,
         ),
         "liquidation_rewards": chart_bars(
             data["stats"],

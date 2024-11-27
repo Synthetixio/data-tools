@@ -186,6 +186,7 @@ if st.session_state.chain in [*SUPPORTED_CHAINS_PERPS, "all"]:
         ),
         y_format="#",
         help_text="Number of daily unique accounts that have at least one settled order",
+        no_decimals=True,
     )
     chart_perps_fees_by_chain = chart_bars(
         data["perps_stats"],

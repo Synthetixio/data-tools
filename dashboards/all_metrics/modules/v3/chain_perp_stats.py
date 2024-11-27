@@ -140,6 +140,7 @@ def make_charts(data):
             y_cols="trades",
             title="Trades",
             y_format="#",
+            no_decimals=True,
         ),
         "oi": chart_lines(
             data["oi"],
@@ -155,6 +156,7 @@ def make_charts(data):
             y_cols="liquidated_accounts",
             title="Account Liquidations",
             y_format="#",
+            no_decimals=True,
         ),
         "liquidation_rewards": chart_bars(
             data["stats"],
@@ -205,6 +207,7 @@ def make_charts(data):
             y_format="#",
             help_text="Number of daily new/returning accounts that have at least one order settled",
             custom_agg=dict(field="dau", name="Total", agg="sum"),
+            no_decimals=True,
         ),
         "account_activity_monthly": chart_area(
             data["account_activity"],
@@ -214,6 +217,7 @@ def make_charts(data):
             y_format="#",
             help_text="Number of new/returning accounts that have at least one order settled in the last 28 days",
             custom_agg=dict(field="mau", name="Total", agg="sum"),
+            no_decimals=True,
         ),
     }
 
