@@ -14,10 +14,10 @@ hide_footer = """
     <style>
         footer {visibility: hidden;}
 
-        div[class^="_stateContainer"] > * {
+        a[class^="_viewerBadge"] > * {
             display: none !important;
         }
-        div[class^="_stateContainer"] iframe {
+        div[class^="_profileContainer"] iframe {
             display: block !important;
         }
     </style>
