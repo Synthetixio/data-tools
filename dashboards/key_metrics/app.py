@@ -14,7 +14,12 @@ hide_footer = """
     <style>
         footer {visibility: hidden;}
 
-
+        div[class^="_stateContainer"] > * {
+            display: none !important;
+        }
+        div[class^="_stateContainer"] iframe {
+            display: block !important;
+        }
     </style>
 """
 st.markdown(hide_footer, unsafe_allow_html=True)
