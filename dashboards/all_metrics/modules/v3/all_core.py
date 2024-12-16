@@ -4,7 +4,6 @@ import streamlit as st
 
 from dashboards.utils.data import export_data
 from dashboards.utils.charts import chart_area, chart_lines
-from dashboards.utils.date_utils import get_start_date
 
 
 @st.cache_data(ttl="30m")
@@ -23,7 +22,7 @@ def fetch_data(start_date, end_date, resolution):
             hourly_issuance,
             cumulative_issuance,
             cumulative_pnl,
-            apr_{resolution} as apr,
+            apr_{resolution} + apr_{resolution}_underlying as apr,
             apr_{resolution}_pnl as apr_pnl,
             apr_{resolution}_rewards as apr_rewards
         FROM {api.environment}_arbitrum_mainnet.fct_core_apr_arbitrum_mainnet apr
@@ -42,7 +41,7 @@ def fetch_data(start_date, end_date, resolution):
             hourly_issuance,
             cumulative_issuance,
             cumulative_pnl,
-            apr_{resolution} as apr,
+            apr_{resolution} + apr_{resolution}_underlying as apr,
             apr_{resolution}_pnl as apr_pnl,
             apr_{resolution}_rewards as apr_rewards
         FROM {api.environment}_base_mainnet.fct_core_apr_base_mainnet apr
@@ -61,7 +60,7 @@ def fetch_data(start_date, end_date, resolution):
             hourly_issuance,
             cumulative_issuance,
             cumulative_pnl,
-            apr_{resolution} as apr,
+            apr_{resolution} + apr_{resolution}_underlying as apr,
             apr_{resolution}_pnl as apr_pnl,
             apr_{resolution}_rewards as apr_rewards
         FROM {api.environment}_eth_mainnet.fct_core_apr_eth_mainnet apr
@@ -187,6 +186,7 @@ def make_charts(data):
             y_format="%",
             color_by="label",
             sort_ascending=True,
+            help_text="APR includes pool performance and yields from underlying Aave deposits over the specified timeframe.",
         ),
     }
 

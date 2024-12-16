@@ -1,7 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import streamlit as st
-import pandas as pd
 
 from dashboards.utils.charts import chart_area, chart_bars
 from dashboards.utils.date_utils import get_start_date

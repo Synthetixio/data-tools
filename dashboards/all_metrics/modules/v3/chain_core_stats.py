@@ -1,11 +1,9 @@
 from datetime import datetime, timedelta
 
 import streamlit as st
-import pandas as pd
 
 from dashboards.utils.data import export_data
 from dashboards.utils.charts import chart_bars, chart_lines
-from dashboards.utils.date_utils import get_start_date
 
 
 @st.cache_data(ttl="30m")
@@ -46,7 +44,8 @@ def fetch_data(chain, start_date, end_date, resolution):
             hourly_issuance,
             cumulative_issuance,
             cumulative_pnl,
-            apr_{resolution} AS apr,
+            apr_{resolution} + apr_{resolution}_underlying AS apr,
+            apr_{resolution}_underlying as apr_underlying,
             apr_{resolution}_pnl AS apr_pnl,
             apr_{resolution}_rewards AS apr_rewards
         FROM {api.environment}_{chain}.fct_core_apr_{chain} apr
@@ -98,6 +97,9 @@ def make_charts(data, resolution):
     Returns:
         dict: A dictionary containing Plotly chart objects.
     """
+    native_yield_tokens = data["apr"][data["apr"]["apr_underlying"] != 0][
+        "collateral_type"
+    ].unique()
     return {
         "tvl": chart_lines(
             df=data["apr"],
@@ -163,6 +165,7 @@ def make_charts(data, resolution):
             title=f"APR - {resolution} average",
             y_format="%",
             color_by="collateral_type",
+            help_text="APR includes pool performance and yields from underlying Aave deposits over the specified timeframe.",
         ),
         "apr_token": chart_lines(
             df=data["apr_token"],
@@ -172,6 +175,14 @@ def make_charts(data, resolution):
             y_format="%",
             color_by="token_pair",
         ),
+        "apr_underlying": chart_lines(
+            df=data["apr"][data["apr"]["collateral_type"].isin(native_yield_tokens)],
+            x_col="ts",
+            y_cols="apr_underlying",
+            title=f"Native APR by Token - {resolution} average",
+            y_format="%",
+            color_by="collateral_type",
+        ),
     }
 
 
@@ -179,7 +190,7 @@ def main():
     """
     The main function that sets up the Streamlit dashboard.
     """
-    st.markdown(f"## Liquidity Pools")
+    st.markdown("## Liquidity Pools")
 
     # Initialize session state for filters if not already set
     if "resolution" not in st.session_state:
@@ -253,6 +264,7 @@ def main():
     st.plotly_chart(charts["hourly_rewards"], use_container_width=True)
     st.plotly_chart(charts["apr_token"], use_container_width=True)
     st.plotly_chart(charts["hourly_rewards_token"], use_container_width=True)
+    st.plotly_chart(charts["apr_underlying"], use_container_width=True)
 
     # Display Top Delegators table
     st.markdown("## Top Delegators")

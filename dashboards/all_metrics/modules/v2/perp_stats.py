@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
 import streamlit as st
-import pandas as pd
 
 from dashboards.utils.data import export_data
 from dashboards.utils.charts import chart_bars, chart_lines

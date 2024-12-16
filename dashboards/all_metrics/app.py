@@ -4,7 +4,7 @@ from api.internal_api import SynthetixAPI, get_db_config
 
 st.set_page_config(
     page_title="Synthetix Stats - All",
-    page_icon=f"dashboards/static/favicon.ico",
+    page_icon="dashboards/static/favicon.ico",
     layout="wide",
 )
 sidebar_logo()
