@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import streamlit as st
 import pandas as pd
@@ -149,6 +149,7 @@ if st.session_state.chain in [*SUPPORTED_CHAINS_CORE, "all"]:
         title="APR by Collateral (7d average)",
         color_by="label",
         y_format="%",
+        help_text="APR includes pool performance and yields from underlying Aave deposits over the specified timeframe.",
     )
 
     st.plotly_chart(chart_core_tvl_by_chain, use_container_width=True)

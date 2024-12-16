@@ -1,11 +1,9 @@
 from datetime import datetime, timedelta
 
 import streamlit as st
-import pandas as pd
 
 from dashboards.utils.data import export_data
 from dashboards.utils.charts import chart_bars, chart_lines
-from dashboards.utils.date_utils import get_start_date
 
 
 @st.cache_data(ttl="30m")
@@ -167,6 +165,7 @@ def make_charts(data, resolution):
             title=f"APR - {resolution} average",
             y_format="%",
             color_by="collateral_type",
+            help_text="APR includes pool performance and yields from underlying Aave deposits over the specified timeframe.",
         ),
         "apr_token": chart_lines(
             df=data["apr_token"],

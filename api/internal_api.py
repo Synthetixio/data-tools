@@ -1,11 +1,11 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
 import streamlit as st
 import sqlalchemy
 import pandas as pd
 from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
-from typing import Generator, List
+from typing import Generator
 from dotenv import load_dotenv
 
 

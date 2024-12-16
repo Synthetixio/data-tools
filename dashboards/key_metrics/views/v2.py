@@ -1,14 +1,9 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import streamlit as st
-import pandas as pd
 
-from dashboards.utils.charts import chart_area, chart_lines, chart_bars
+from dashboards.utils.charts import chart_area, chart_bars
 from dashboards.utils.date_utils import get_start_date
-from dashboards.key_metrics.constants import (
-    SUPPORTED_CHAINS_CORE,
-    SUPPORTED_CHAINS_PERPS,
-)
 
 st.markdown("# Synthetix V2")
 

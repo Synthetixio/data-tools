@@ -1,11 +1,9 @@
 from datetime import datetime, timedelta
 
 import streamlit as st
-import pandas as pd
 
 from dashboards.utils.data import export_data
-from dashboards.utils.charts import chart_bars, chart_lines
-from dashboards.utils.date_utils import get_start_date
+from dashboards.utils.charts import chart_lines
 
 
 @st.cache_data(ttl="30m")

@@ -186,6 +186,7 @@ def make_charts(data):
             y_format="%",
             color_by="label",
             sort_ascending=True,
+            help_text="APR includes pool performance and yields from underlying Aave deposits over the specified timeframe.",
         ),
     }
 
