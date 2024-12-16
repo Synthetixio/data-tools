@@ -191,6 +191,11 @@ class SynthetixAPI:
                 'rewards_usd', 'apr', 'apr_rewards'
         """
         chain_label = self.SUPPORTED_CHAINS[chain]
+        # TODO: Remove this chain check once the underlying APR is available for all chains
+        apr_str = f"apr_{resolution}{
+                ' + apr_' + resolution + '_underlying as apr_' + resolution
+                if chain in ['arbitrum_mainnet', 'base_mainnet']
+                else ' as apr_' + resolution}"
         query = f"""
         SELECT 
             ts,
@@ -202,7 +207,7 @@ class SynthetixAPI:
             collateral_value,
             hourly_pnl,
             rewards_usd,
-            apr_{resolution},
+            {apr_str},
             apr_{resolution}_rewards
         FROM {self.environment}_{chain}.fct_core_apr_{chain} AS stats
         LEFT JOIN {self.environment}_seeds.{chain}_tokens AS tokens
