@@ -423,14 +423,13 @@ def _create_traces_from_string(
     percentage = True if y_format == "%" else False
     if color_by is not None:
         if trace_type == "area":
-            # Get all unique indexes
             all_indexes = pd.Index([])
             for _, group in df.groupby(color_by):
-                all_indexes = all_indexes.union(group[x_col])
+                all_indexes = all_indexes.union(pd.Index(group[x_col].unique()))
 
         for i, (label, group) in enumerate(df.groupby(color_by)):
             if trace_type == "area":
-                # Reindex the group to include all x values
+                group = group.drop_duplicates(subset=x_col).sort_values(by=x_col)
                 group = group.set_index(x_col).reindex(all_indexes, fill_value=0)
             color = color_map[i % len(color_map)]
             custom_data = group[y_cols]
