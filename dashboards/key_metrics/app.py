@@ -4,7 +4,7 @@ from api.internal_api import SynthetixAPI, get_db_config
 
 st.set_page_config(
     page_title="Synthetix Stats",
-    page_icon=f"dashboards/static/favicon.ico",
+    page_icon="dashboards/static/favicon.ico",
     layout="wide",
 )
 sidebar_logo()
@@ -30,14 +30,13 @@ st.session_state.api = load_api()
 cross_chain = st.Page("views/cross_chain.py", title="Synthetix Overview")
 lp = st.Page("views/lp.py", title="Liquidity Providers")
 perps = st.Page("views/perps.py", title="Perps")
-token = st.Page("views/token.py", title="SNX Token")
 v2 = st.Page("views/v2.py", title="Synthetix V2")
 accounts = st.Page("views/accounts.py", title="Accounts Activity")
 links = st.Page("views/links.py", title="Links")
 
 # navigation
 pages = {
-    "": [cross_chain, lp, perps, token, v2, links],
+    "": [cross_chain, lp, perps, v2, links],
 }
 nav = st.navigation(pages)
 nav.run()
