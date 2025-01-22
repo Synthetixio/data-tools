@@ -7,6 +7,7 @@ ALCHEMY_KEY = st.secrets.settings.WEB3_ALCHEMY_API_KEY
 
 ALCHEMY_NETWORK_SLUGS = {
     1: "eth-mainnet",
+    10: "optimism-mainnet",
     8453: "base-mainnet",
     42161: "arb-mainnet",
     11155111: "eth-sepolia",
