@@ -4,9 +4,8 @@ import pandas as pd
 from synthetix import Synthetix
 from synthetix.utils.multicall import multicall_erc7412, call_erc7412
 from synthetix.utils import ether_to_wei, wei_to_ether
-from api.internal_api import SynthetixAPI, get_db_config
 from dashboards.system_monitor.modules.settings import settings
-from dashboards.utils.charts import chart_lines, chart_bars
+from dashboards.utils.charts import chart_lines
 
 
 PERPS_NETWORKS = [

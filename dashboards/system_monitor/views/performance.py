@@ -1,6 +1,4 @@
 import streamlit as st
-
-from api.internal_api import SynthetixAPI, get_db_config
 from dashboards.utils import performance
 
 st.markdown("# Query Performance")
