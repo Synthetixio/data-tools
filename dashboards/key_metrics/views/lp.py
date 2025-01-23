@@ -9,7 +9,7 @@ from dashboards.key_metrics.constants import SUPPORTED_CHAINS_CORE
 
 st.markdown("# Liquidity Providers")
 
-APR_RESOLUTION = "7d"
+APR_RESOLUTION = "28d"
 
 if "chain" not in st.session_state:
     st.session_state.chain = st.query_params.get("chain", "all")

@@ -115,6 +115,7 @@ def make_charts(data, resolution):
             y_cols="debt",
             title="Debt",
             color_by="collateral_type",
+            custom_agg=dict(field="debt", name="Total", agg="sum"),
         ),
         "hourly_issuance": chart_bars(
             df=data["apr"],
@@ -122,6 +123,7 @@ def make_charts(data, resolution):
             y_cols="hourly_issuance",
             title="Hourly Issuance",
             color_by="collateral_type",
+            custom_agg=dict(field="hourly_issuance", name="Total", agg="sum"),
         ),
         "issuance": chart_lines(
             df=data["apr"],
@@ -129,6 +131,7 @@ def make_charts(data, resolution):
             y_cols="cumulative_issuance",
             title="Issuance",
             color_by="collateral_type",
+            custom_agg=dict(field="cumulative_issuance", name="Total", agg="sum"),
         ),
         "pnl": chart_lines(
             df=data["apr"],
@@ -136,6 +139,7 @@ def make_charts(data, resolution):
             y_cols="cumulative_pnl",
             title="Pnl",
             color_by="collateral_type",
+            custom_agg=dict(field="cumulative_pnl", name="Total", agg="sum"),
         ),
         "hourly_pnl": chart_bars(
             df=data["apr"],
@@ -143,6 +147,7 @@ def make_charts(data, resolution):
             y_cols="hourly_pnl",
             title="Hourly Pnl",
             color_by="collateral_type",
+            custom_agg=dict(field="hourly_pnl", name="Total", agg="sum"),
         ),
         "hourly_rewards": chart_bars(
             df=data["apr"],
@@ -150,6 +155,7 @@ def make_charts(data, resolution):
             y_cols="rewards_usd",
             title="Hourly Rewards",
             color_by="collateral_type",
+            custom_agg=dict(field="rewards_usd", name="Total", agg="sum"),
         ),
         "hourly_rewards_token": chart_bars(
             df=data["apr_token"],
@@ -157,6 +163,7 @@ def make_charts(data, resolution):
             y_cols="rewards_usd",
             title="Hourly Rewards (Collateral : Reward)",
             color_by="token_pair",
+            custom_agg=dict(field="rewards_usd", name="Total", agg="sum"),
         ),
         "apr": chart_lines(
             df=data["apr"],
