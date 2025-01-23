@@ -63,36 +63,15 @@ st.write(
 st.markdown("## Reward Calculations")
 st.write(f"Total reward amount: {reward_amount} {reward_token}")
 
-abi = [
-    {
-        "inputs": [
-            {"internalType": "address[]", "name": "users", "type": "address[]"},
-            {"internalType": "uint256[]", "name": "amounts", "type": "uint256[]"},
-        ],
-        "name": "increaseUserRewards",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function",
-    }
-]
-contract = snx.web3.eth.contract(abi=abi)
-
 # get the data
 addresses = [
     snx.web3.to_checksum_address(address) for address in df_filt["account"].values
 ]
 amounts = [
-    format_ether(reward, decimals=decimals) for reward in df_filt["reward"].values
+    str(format_ether(reward, decimals=decimals)) for reward in df_filt["reward"].values
 ]
+address_map = dict(zip(addresses, amounts))
 
 # print it
-st.markdown("## Inputs")
-st.write("Addresses:", addresses)
-st.write("Reward amounts:", amounts)
-
-# format the data
-st.markdown("## Transaction Data")
-data = contract.encode_abi(fn_name="increaseUserRewards", args=[addresses, amounts])
-
-st.write(data)
-st.markdown("Decode ABI data [here](https://openchain.xyz/tools/abi) to verify")
+st.markdown("## Merkle Input")
+st.write(address_map)
