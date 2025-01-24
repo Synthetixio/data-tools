@@ -201,7 +201,7 @@ def main():
 
     # Initialize session state for filters if not already set
     if "resolution" not in st.session_state:
-        st.session_state.resolution = "7d"
+        st.session_state.resolution = "28d"
     if "start_date" not in st.session_state:
         st.session_state.start_date = datetime.today().date() - timedelta(days=14)
     if "end_date" not in st.session_state:
@@ -213,7 +213,7 @@ def main():
         st.radio(
             "Resolution",
             options=["28d", "7d", "24h"],
-            index=1,
+            index=0,
             key="resolution",
         )
 

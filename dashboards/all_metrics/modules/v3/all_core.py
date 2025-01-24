@@ -200,7 +200,7 @@ def main():
         st.radio(
             "Resolution",
             ["28d", "7d", "24h"],
-            index=1,
+            index=0,
             key="resolution",
         )
 
