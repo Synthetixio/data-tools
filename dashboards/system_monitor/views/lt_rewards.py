@@ -36,10 +36,13 @@ last_redemption_block = df_last_redemption["last_redemption_block"].values[0]
 query = f"""
 select
     epoch_start,
-    rank,
     account,
     total_fees_paid,
-    fees_paid_pct    
+    fees_paid_pct,
+    fees_rank,
+    volume,
+    volume_pct,
+    volume_rank
 from prod_{network_name}_mainnet.lt_leaderboard
 where epoch_start > date '2025-01-14'
 order by epoch_start desc, rank asc
@@ -51,7 +54,7 @@ epochs = df["epoch_start"].unique()
 # display the results
 st.selectbox("Epoch", epochs, key="epoch")
 df_filt = df[df["epoch_start"] == st.session_state.epoch]
-df_filt["reward"] = df_filt["fees_paid_pct"] * reward_amount
+df_filt["reward"] = df_filt["volume_pct"] * reward_amount
 df_filt["reward_token"] = reward_token
 
 st.dataframe(df_filt, use_container_width=True, hide_index=True)
