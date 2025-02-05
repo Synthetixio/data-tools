@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
 import streamlit as st
-import pandas as pd
 
 from dashboards.utils.data import export_data
 from dashboards.utils.charts import chart_bars
@@ -69,6 +68,7 @@ def make_charts(data):
             y_format="#",
             unified_hover=False,
             no_decimals=True,
+            custom_agg=dict(field="trades", name="Total", agg="sum"),
         ),
         "trades_pct": chart_bars(
             df,
@@ -86,6 +86,7 @@ def make_charts(data):
             title="Notional Size Settled",
             color_by="keeper",
             unified_hover=False,
+            custom_agg=dict(field="amount_settled", name="Total", agg="sum"),
         ),
         "amount_settled_pct": chart_bars(
             df,
@@ -103,6 +104,7 @@ def make_charts(data):
             title="Settlement Rewards",
             color_by="keeper",
             unified_hover=False,
+            custom_agg=dict(field="settlement_rewards", name="Total", agg="sum"),
         ),
         "settlement_rewards_pct": chart_bars(
             df,

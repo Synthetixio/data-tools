@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
 import streamlit as st
-import pandas as pd
 
 from dashboards.utils.data import export_data
 from dashboards.utils.charts import chart_bars, chart_lines
@@ -29,11 +28,13 @@ def fetch_data(chain, start_date, end_date, resolution):
             ts,
             exchange_fees,
             liquidation_fees,
+            exchange_fees + liquidation_fees as total_fees,
             volume,
             amount_liquidated,
             cumulative_volume,
             cumulative_exchange_fees,
             cumulative_liquidation_fees,
+            cumulative_exchange_fees + cumulative_liquidation_fees as cumulative_total_fees,
             cumulative_amount_liquidated,
             long_oi_usd,
             short_oi_usd,
@@ -83,12 +84,14 @@ def make_charts(data, resolution):
             ["cumulative_exchange_fees", "cumulative_liquidation_fees"],
             "Cumulative Fees",
             smooth=True,
+            custom_agg=dict(field="cumulative_total_fees", name="Total", agg="sum"),
         ),
         "daily_fees": chart_bars(
             data["market_stats_agg"],
             "ts",
             ["exchange_fees", "liquidation_fees"],
             f"{resolution.capitalize()} Fees",
+            custom_agg=dict(field="total_fees", name="Total", agg="sum"),
         ),
         "cumulative_liquidation": chart_lines(
             data["market_stats_agg"],

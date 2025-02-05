@@ -1,15 +1,15 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import streamlit as st
 import pandas as pd
 
-from dashboards.utils.charts import chart_area, chart_lines, chart_bars
+from dashboards.utils.charts import chart_area, chart_lines
 from dashboards.utils.date_utils import get_start_date
 from dashboards.key_metrics.constants import SUPPORTED_CHAINS_CORE
 
 st.markdown("# Liquidity Providers")
 
-APR_RESOLUTION = "7d"
+APR_RESOLUTION = "28d"
 
 if "chain" not in st.session_state:
     st.session_state.chain = st.query_params.get("chain", "all")
@@ -100,6 +100,7 @@ chart_core_apr_by_collateral = chart_lines(
     color_by="label",
     y_format="%",
     sort_ascending=True,
+    help_text="APR includes pool performance and yields from underlying Aave deposits over the specified timeframe.",
 )
 chart_core_apr_rewards_by_collateral = chart_lines(
     data["core_stats_by_collateral"],
@@ -109,6 +110,7 @@ chart_core_apr_rewards_by_collateral = chart_lines(
     color_by="label",
     y_format="%",
     sort_ascending=True,
+    help_text="Rewards APR includes the USD value of all assets distributed to a pool during the specified timeframe.",
 )
 
 st.plotly_chart(chart_core_tvl_by_collateral, use_container_width=True)

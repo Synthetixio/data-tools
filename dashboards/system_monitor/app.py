@@ -35,10 +35,11 @@ core = st.Page("views/core.py", title="Core System")
 perps = st.Page("views/perps.py", title="Perps Markets")
 performance = st.Page("views/performance.py", title="Query Performance")
 depth = st.Page("views/depth.py", title="Market Depth")
+lt_rewards = st.Page("views/lt_rewards.py", title="LT Rewards")
 
 # navigation
 pages = {
-    "": [core, perps, performance, depth],
+    "": [core, perps, performance, depth, lt_rewards],
 }
 nav = st.navigation(pages)
 nav.run()

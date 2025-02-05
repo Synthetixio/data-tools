@@ -13,6 +13,11 @@ NETWORK_CONFIGS = {
         "network_name": "Ethereum Mainnet",
         "provider_rpc": get_provider_url(1),
     },
+    10: {
+        "network_id": 10,
+        "network_name": "Optimism Mainnet",
+        "provider_rpc": get_provider_url(10),
+    },
     8453: {
         "network_id": 8453,
         "network_name": "Base Mainnet",

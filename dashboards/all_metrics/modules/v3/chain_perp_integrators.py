@@ -1,11 +1,9 @@
 from datetime import datetime, timedelta
 
 import streamlit as st
-import pandas as pd
 
 from dashboards.utils.data import export_data
-from dashboards.utils.charts import chart_bars, chart_lines
-from dashboards.utils.date_utils import get_start_date
+from dashboards.utils.charts import chart_bars
 
 
 @st.cache_data(ttl="30m")
@@ -72,6 +70,7 @@ def make_charts(data):
             color_by="tracking_code",
             y_format="#",
             no_decimals=True,
+            custom_agg=dict(field="accounts", name="Total", agg="sum"),
         ),
         "volume": chart_bars(
             df=data["stats"],
@@ -79,6 +78,7 @@ def make_charts(data):
             y_cols="volume",
             title="Volume",
             color_by="tracking_code",
+            custom_agg=dict(field="volume", name="Total", agg="sum"),
         ),
         "volume_pct": chart_bars(
             df=data["stats"],
@@ -96,6 +96,7 @@ def make_charts(data):
             color_by="tracking_code",
             y_format="#",
             no_decimals=True,
+            custom_agg=dict(field="trades", name="Total", agg="sum"),
         ),
         "trades_pct": chart_bars(
             df=data["stats"],
@@ -111,6 +112,7 @@ def make_charts(data):
             y_cols="exchange_fees",
             title="Exchange Fees",
             color_by="tracking_code",
+            custom_agg=dict(field="exchange_fees", name="Total", agg="sum"),
         ),
         "exchange_fees_pct": chart_bars(
             df=data["stats"],
@@ -126,6 +128,7 @@ def make_charts(data):
             y_cols="referral_fees",
             title="Referral Fees",
             color_by="tracking_code",
+            custom_agg=dict(field="referral_fees", name="Total", agg="sum"),
         ),
         "referral_fees_pct": chart_bars(
             df=data["stats"],

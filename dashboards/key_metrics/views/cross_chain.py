@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import streamlit as st
 import pandas as pd
@@ -12,7 +12,7 @@ from dashboards.key_metrics.constants import (
 
 st.markdown("# Synthetix Overview")
 
-APR_RESOLUTION = "7d"
+APR_RESOLUTION = "28d"
 PERPS_RESOLUTION = "daily"
 
 if "chain" not in st.session_state:
@@ -97,7 +97,11 @@ def fetch_data(date_range, chain):
             if open_interest
             else pd.DataFrame()
         ),
-        "perps_account_activity": pd.concat(perps_account_activity, ignore_index=True),
+        "perps_account_activity": (
+            pd.concat(perps_account_activity, ignore_index=True)
+            if perps_account_activity
+            else pd.DataFrame()
+        ),
     }
 
 
@@ -146,9 +150,10 @@ if st.session_state.chain in [*SUPPORTED_CHAINS_CORE, "all"]:
         data["core_stats_by_collateral"],
         x_col="ts",
         y_cols=f"apr_{APR_RESOLUTION}",
-        title="APR by Collateral (7d average)",
+        title="APR by Collateral (28d average)",
         color_by="label",
         y_format="%",
+        help_text="APR includes pool performance and yields from underlying Aave deposits over the specified timeframe.",
     )
 
     st.plotly_chart(chart_core_tvl_by_chain, use_container_width=True)
