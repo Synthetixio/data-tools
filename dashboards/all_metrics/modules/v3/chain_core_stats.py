@@ -39,12 +39,16 @@ def fetch_data(chain, start_date, end_date, resolution):
             COALESCE(tk.token_symbol, collateral_type) AS collateral_type,
             collateral_value,
             debt,
-            hourly_pnl,
+            hourly_pnl + rewards_usd as hourly_pnl,
+            hourly_pnl {"+ liquidation_rewards_usd" if chain == "base_mainnet" else ""} as hourly_performance,
             rewards_usd,
             hourly_issuance,
             cumulative_issuance,
-            cumulative_pnl,
-            {"cumulative_liquidation_rewards," if chain == 'base_mainnet' else ""}
+            cumulative_pnl + cumulative_rewards as cumulative_pnl,
+            cumulative_pnl {"+ cumulative_liquidation_rewards" if chain == "base_mainnet" else ""} as cumulative_performance,
+            cumulative_rewards,
+            {"cumulative_liquidation_rewards," if chain == "base_mainnet" else ""}
+            {"liquidation_rewards_usd," if chain == "base_mainnet" else ""}
             apr_{resolution} + apr_{resolution}_underlying AS apr,
             apr_{resolution}_underlying as apr_underlying,
             apr_{resolution}_pnl AS apr_pnl,
@@ -78,10 +82,6 @@ def fetch_data(chain, start_date, end_date, resolution):
         ORDER BY ts
         """
     )
-    
-    if chain == 'base_mainnet':
-        df_apr['cumulative_pnl'] = df_apr['cumulative_pnl'] + df_apr['cumulative_liquidation_rewards']
-
     return {
         "account_delegation": df_account_delegation,
         "apr": df_apr,
@@ -145,6 +145,14 @@ def make_charts(data, resolution):
             color_by="collateral_type",
             custom_agg=dict(field="cumulative_pnl", name="Total", agg="sum"),
         ),
+        "performance": chart_lines(
+            df=data["apr"],
+            x_col="ts",
+            y_cols="cumulative_performance",
+            title="Performance",
+            color_by="collateral_type",
+            custom_agg=dict(field="cumulative_performance", name="Total", agg="sum"),
+        ),
         "hourly_pnl": chart_bars(
             df=data["apr"],
             x_col="ts",
@@ -152,6 +160,14 @@ def make_charts(data, resolution):
             title="Hourly Pnl",
             color_by="collateral_type",
             custom_agg=dict(field="hourly_pnl", name="Total", agg="sum"),
+        ),
+        "hourly_performance": chart_bars(
+            df=data["apr"],
+            x_col="ts",
+            y_cols="hourly_performance",
+            title="Hourly Performance",
+            color_by="collateral_type",
+            custom_agg=dict(field="hourly_performance", name="Total", agg="sum"),
         ),
         "hourly_rewards": chart_bars(
             df=data["apr"],
@@ -264,11 +280,13 @@ def main():
     with col1:
         st.plotly_chart(charts["tvl"], use_container_width=True)
         st.plotly_chart(charts["hourly_pnl"], use_container_width=True)
+        st.plotly_chart(charts["hourly_performance"], use_container_width=True)
         st.plotly_chart(charts["hourly_issuance"], use_container_width=True)
 
     with col2:
         st.plotly_chart(charts["debt"], use_container_width=True)
         st.plotly_chart(charts["pnl"], use_container_width=True)
+        st.plotly_chart(charts["performance"], use_container_width=True)
         st.plotly_chart(charts["issuance"], use_container_width=True)
 
     # make these charts full width
