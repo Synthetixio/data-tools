@@ -40,7 +40,7 @@ def fetch_data(start_date, end_date, resolution):
             rewards_usd,
             hourly_issuance,
             cumulative_issuance,
-            cumulative_pnl,
+            cumulative_pnl + cumulative_liquidation_rewards as cumulative_pnl,
             apr_{resolution} + apr_{resolution}_underlying as apr,
             apr_{resolution}_pnl as apr_pnl,
             apr_{resolution}_rewards as apr_rewards
@@ -96,13 +96,14 @@ def fetch_data(start_date, end_date, resolution):
             ts,
             label,
             sum(collateral_value) as collateral_value,
-            sum(cumulative_pnl) as cumulative_pnl
+            sum(cumulative_pnl + cumulative_liquidation_rewards) as cumulative_pnl
         from (
             SELECT 
                 ts,
                 'Base' as label,
                 collateral_value,
-                cumulative_pnl
+                cumulative_pnl,
+                cumulative_liquidation_rewards
             FROM {api.environment}_base_mainnet.fct_core_apr_base_mainnet apr
             LEFT JOIN {api.environment}_seeds.base_mainnet_tokens tk on lower(apr.collateral_type) = lower(tk.token_address)
             WHERE ts >= '{start_date}' and ts <= '{end_date}'

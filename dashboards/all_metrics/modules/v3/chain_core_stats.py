@@ -44,6 +44,7 @@ def fetch_data(chain, start_date, end_date, resolution):
             hourly_issuance,
             cumulative_issuance,
             cumulative_pnl,
+            {"cumulative_liquidation_rewards," if chain == 'base_mainnet' else ""}
             apr_{resolution} + apr_{resolution}_underlying AS apr,
             apr_{resolution}_underlying as apr_underlying,
             apr_{resolution}_pnl AS apr_pnl,
@@ -77,6 +78,9 @@ def fetch_data(chain, start_date, end_date, resolution):
         ORDER BY ts
         """
     )
+    
+    if chain == 'base_mainnet':
+        df_apr['cumulative_pnl'] = df_apr['cumulative_pnl'] + df_apr['cumulative_liquidation_rewards']
 
     return {
         "account_delegation": df_account_delegation,
