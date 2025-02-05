@@ -81,13 +81,14 @@ def fetch_data(start_date, end_date, resolution):
             ts,
             label,
             sum(collateral_value) as collateral_value,
-            sum(cumulative_pnl) as cumulative_pnl
+            sum(cumulative_pnl + cumulative_rewards) as cumulative_pnl
         from (
             SELECT 
                 ts,
                 'Arbitrum' as label,
                 collateral_value,
-                cumulative_pnl
+                cumulative_pnl,
+                cumulative_rewards
             FROM {api.environment}_arbitrum_mainnet.fct_core_apr_arbitrum_mainnet apr
             LEFT JOIN {api.environment}_seeds.arbitrum_mainnet_tokens tk on lower(apr.collateral_type) = lower(tk.token_address)
             WHERE ts >= '{start_date}' and ts <= '{end_date}'
@@ -99,14 +100,14 @@ def fetch_data(start_date, end_date, resolution):
             ts,
             label,
             sum(collateral_value) as collateral_value,
-            sum(cumulative_pnl + cumulative_liquidation_rewards) as cumulative_pnl
+            sum(cumulative_pnl + cumulative_rewards) as cumulative_pnl
         from (
             SELECT 
                 ts,
                 'Base' as label,
                 collateral_value,
                 cumulative_pnl,
-                cumulative_liquidation_rewards
+                cumulative_rewards
             FROM {api.environment}_base_mainnet.fct_core_apr_base_mainnet apr
             LEFT JOIN {api.environment}_seeds.base_mainnet_tokens tk on lower(apr.collateral_type) = lower(tk.token_address)
             WHERE ts >= '{start_date}' and ts <= '{end_date}'
@@ -118,13 +119,14 @@ def fetch_data(start_date, end_date, resolution):
             ts,
             label,
             sum(collateral_value) as collateral_value,
-            sum(cumulative_pnl) as cumulative_pnl
+            sum(cumulative_pnl + cumulative_rewards) as cumulative_pnl
         from (
             SELECT 
                 ts,
                 'Ethereum' as label,
                 collateral_value,
-                cumulative_pnl
+                cumulative_pnl,
+                cumulative_rewards
             FROM {api.environment}_eth_mainnet.fct_core_apr_eth_mainnet apr
             LEFT JOIN {api.environment}_seeds.eth_mainnet_tokens tk on lower(apr.collateral_type) = lower(tk.token_address)
             WHERE ts >= '{start_date}' and ts <= '{end_date}'
