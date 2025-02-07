@@ -58,6 +58,7 @@ def fetch_data(chain, start_date, end_date, resolution):
             ON LOWER(apr.collateral_type) = LOWER(tk.token_address)
         WHERE ts >= '{start_date}' AND ts <= '{end_date}'
             AND pool_id = 1
+            and tk.token_symbol is not null
         ORDER BY ts
         """
     )

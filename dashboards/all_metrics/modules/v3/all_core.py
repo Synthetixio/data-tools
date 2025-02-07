@@ -29,6 +29,7 @@ def fetch_data(start_date, end_date, resolution):
         FROM {api.environment}_arbitrum_mainnet.fct_core_apr_arbitrum_mainnet apr
         LEFT JOIN {api.environment}_seeds.arbitrum_mainnet_tokens tk on lower(apr.collateral_type) = lower(tk.token_address)
         WHERE ts >= '{start_date}' and ts <= '{end_date}'
+            and tk.token_symbol is not null
         
         UNION ALL
         
