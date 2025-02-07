@@ -139,7 +139,9 @@ if st.session_state.chain in [*SUPPORTED_CHAINS_CORE, "all"]:
         ),
     )
     chart_core_tvl_by_collateral = chart_area(
-        data["core_stats_by_collateral"],
+        data["core_stats_by_collateral"][
+            ~data["core_stats_by_collateral"]["label"].str.startswith("0x")
+        ],
         x_col="ts",
         y_cols="collateral_value",
         title="TVL by Collateral",
@@ -147,7 +149,9 @@ if st.session_state.chain in [*SUPPORTED_CHAINS_CORE, "all"]:
         custom_agg=dict(field="collateral_value", name="Total", agg="sum"),
     )
     chart_core_apr_by_collateral = chart_lines(
-        data["core_stats_by_collateral"],
+        data["core_stats_by_collateral"][
+            ~data["core_stats_by_collateral"]["label"].str.startswith("0x")
+        ],
         x_col="ts",
         y_cols=f"apr_{APR_RESOLUTION}",
         title="APR by Collateral (28d average)",

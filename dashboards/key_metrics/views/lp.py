@@ -84,7 +84,9 @@ with filter_col2:
     )
 
 chart_core_tvl_by_collateral = chart_area(
-    data["core_stats_by_collateral"],
+    data["core_stats_by_collateral"][
+        ~data["core_stats_by_collateral"].label.str.contains("0x")
+    ],
     x_col="ts",
     y_cols="collateral_value",
     title="TVL",
@@ -93,7 +95,9 @@ chart_core_tvl_by_collateral = chart_area(
     custom_agg=dict(field="collateral_value", name="Total", agg="sum"),
 )
 chart_core_apr_by_collateral = chart_lines(
-    data["core_stats_by_collateral"],
+    data["core_stats_by_collateral"][
+        ~data["core_stats_by_collateral"].label.str.contains("0x")
+    ],
     x_col="ts",
     y_cols=f"apr_{APR_RESOLUTION}",
     title=f"Total APR ({APR_RESOLUTION} average)",
@@ -103,7 +107,9 @@ chart_core_apr_by_collateral = chart_lines(
     help_text="APR includes pool performance and yields from underlying Aave deposits over the specified timeframe.",
 )
 chart_core_apr_rewards_by_collateral = chart_lines(
-    data["core_stats_by_collateral"],
+    data["core_stats_by_collateral"][
+        ~data["core_stats_by_collateral"].label.str.contains("0x")
+    ],
     x_col="ts",
     y_cols=f"apr_{APR_RESOLUTION}_rewards",
     title=f"Rewards APR ({APR_RESOLUTION} average)",
