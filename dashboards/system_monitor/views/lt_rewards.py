@@ -43,7 +43,7 @@ select
     volume,
     volume_pct,
     volume_rank
-from prod_{network_name}_mainnet.lt_leaderboard
+from prod_{network_name}_mainnet.lt_leaderboard_{network_name}
 where epoch_start > date '2025-01-14'
 order by epoch_start desc, rank asc
 """
